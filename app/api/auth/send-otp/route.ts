@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     await sendFitsms({
       to: normalizedPhone,
-      message: `Your LMS verification code is ${otp}. It expires in 5 minutes.`,
+      message: `Your ICT Class verification code is ${otp}. It expires in 5 minutes. Congratulations and well done for completing your step!`,
     })
 
     return NextResponse.json({
