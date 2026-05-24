@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
 import EnrollmentForm from '@/components/EnrollmentForm'
+import { requireCompletedProfile } from '@/lib/auth/profile'
 
 export default async function CoursePage({
   params,
@@ -20,6 +21,8 @@ export default async function CoursePage({
   if (!user) {
     redirect('/auth/login')
   }
+
+  await requireCompletedProfile(supabase, user.id)
 
   // Get course details
   const { data: course, error: courseError } = await supabase
@@ -54,6 +57,12 @@ export default async function CoursePage({
   // Get videos for this course
   const { data: videos } = await supabase
     .from('videos')
+    .select('*')
+    .eq('course_id', id)
+    .order('sequence_order', { ascending: true })
+
+  const { data: materials } = await supabase
+    .from('course_materials')
     .select('*')
     .eq('course_id', id)
     .order('sequence_order', { ascending: true })
@@ -112,37 +121,65 @@ export default async function CoursePage({
 
             {/* Videos Section */}
             {enrollment && enrollment.status === 'active' ? (
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-6">Course Content</h2>
-                {videos && videos.length > 0 ? (
-                  <div className="space-y-4">
-                    {videos.map((video, index) => (
-                      <Link
-                        key={video.id}
-                        href={`/student/watch/${video.id}`}
-                      >
-                        <Card className="border-border hover:shadow-lg hover:shadow-primary/10 transition cursor-pointer">
-                          <CardContent className="p-6 flex items-center gap-4">
-                            <div className="flex-shrink-0 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
-                              <span className="text-primary font-bold">{index + 1}</span>
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-foreground">{video.title}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {video.duration_seconds
-                                  ? `${Math.floor(video.duration_seconds / 60)} minutes`
-                                  : 'Duration not available'}
-                              </p>
-                            </div>
-                            <div className="text-primary font-semibold">Watch →</div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No videos available for this course yet.</p>
-                )}
+              <div className="space-y-10">
+                <section>
+                  <h2 className="text-2xl font-bold text-foreground mb-6">Course Videos</h2>
+                  {videos && videos.length > 0 ? (
+                    <div className="space-y-4">
+                      {videos.map((video, index) => (
+                        <Link
+                          key={video.id}
+                          href={`/student/watch/${video.id}`}
+                        >
+                          <Card className="border-border hover:shadow-lg hover:shadow-primary/10 transition cursor-pointer">
+                            <CardContent className="p-6 flex items-center gap-4">
+                              <div className="flex-shrink-0 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                                <span className="text-primary font-bold">{index + 1}</span>
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-foreground">{video.title}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {video.duration_seconds
+                                    ? `${Math.floor(video.duration_seconds / 60)} minutes`
+                                    : 'Duration not available'}
+                                </p>
+                              </div>
+                              <div className="text-primary font-semibold">Watch →</div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">No videos available for this course yet.</p>
+                  )}
+                </section>
+
+                <section>
+                  <h2 className="text-2xl font-bold text-foreground mb-6">Course PDFs</h2>
+                  {materials && materials.length > 0 ? (
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {materials.map((material) => (
+                        <a
+                          key={material.id}
+                          href={material.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <Card className="border-border hover:shadow-lg hover:shadow-primary/10 transition h-full">
+                            <CardContent className="p-6">
+                              <div className="text-sm text-primary font-semibold mb-2">PDF</div>
+                              <h3 className="font-semibold text-foreground">{material.title}</h3>
+                              <p className="text-sm text-muted-foreground mt-2">Open material</p>
+                            </CardContent>
+                          </Card>
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">No PDFs available for this course yet.</p>
+                  )}
+                </section>
               </div>
             ) : (
               <div className="text-center py-12">

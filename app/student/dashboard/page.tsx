@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
+import { requireCompletedProfile } from '@/lib/auth/profile'
 
 export default async function StudentDashboard() {
   const supabase = await createClient()
@@ -16,11 +17,7 @@ export default async function StudentDashboard() {
   }
 
   // Get user profile
-  const { data: userProfile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  const userProfile = await requireCompletedProfile(supabase, user.id)
 
   // Get all enrollments for this user
   const { data: enrollments } = await supabase

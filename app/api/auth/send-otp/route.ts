@@ -1,4 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { normalizePhoneNumber } from '@/lib/auth/phone'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { sendFitsms } from '@/lib/sms/fitsms'
+import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -12,22 +15,35 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const supabase = await createClient()
+    const normalizedPhone = normalizePhoneNumber(phone)
+    const otp = crypto.randomInt(100000, 999999).toString()
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex')
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
+    const supabase = createAdminClient()
 
-    const { data, error } = await supabase.auth.signInWithOtp({
-      phone,
+    const { error } = await supabase.from('otp_codes').insert({
+      phone_number: normalizedPhone,
+      otp_hash: otpHash,
+      expires_at: expiresAt,
+      attempts: 0,
     })
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
+    await sendFitsms({
+      to: normalizedPhone,
+      message: `Your LMS verification code is ${otp}. It expires in 5 minutes.`,
+    })
+
     return NextResponse.json({
       success: true,
       message: 'OTP sent to your phone',
-      data,
+      phone: normalizedPhone,
     })
   } catch (error) {
+    console.error('Send OTP error:', error)
     return NextResponse.json(
       { error: 'Failed to send OTP' },
       { status: 500 }

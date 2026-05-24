@@ -13,6 +13,7 @@ interface Video {
   youtube_url: string
   course_id: string
   sequence_order: number
+  duration_seconds: number
 }
 
 interface Course {
@@ -44,6 +45,17 @@ export default function WatchPage({
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
           router.push('/auth/login')
+          return
+        }
+
+        const { data: profile } = await supabase
+          .from('users')
+          .select('full_name, is_admin')
+          .eq('id', user.id)
+          .single()
+
+        if (!profile?.is_admin && !profile?.full_name) {
+          router.push('/student/profile')
           return
         }
 
@@ -153,6 +165,11 @@ export default function WatchPage({
     return match ? match[1] : ''
   }
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -190,21 +207,13 @@ export default function WatchPage({
             <Link href="/student/dashboard" className="text-foreground hover:text-primary transition">
               Dashboard
             </Link>
-            <form
-              action={async () => {
-                'use server'
-                const client = await createClient()
-                await client.auth.signOut()
-              }}
-              method="POST"
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition"
             >
-              <button
-                type="submit"
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition"
-              >
-                Sign Out
-              </button>
-            </form>
+              Sign Out
+            </button>
           </div>
         </div>
       </nav>

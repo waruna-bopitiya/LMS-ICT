@@ -23,6 +23,9 @@ export default function AddCoursePage() {
   const [videos, setVideos] = useState<
     Array<{ title: string; youtubeUrl: string; duration: string }>
   >([{ title: '', youtubeUrl: '', duration: '' }])
+  const [pdfs, setPdfs] = useState<Array<{ title: string; url: string }>>([
+    { title: '', url: '' },
+  ])
 
   const handleCourseChange = (field: string, value: string) => {
     setCourseData(prev => ({ ...prev, [field]: value }))
@@ -40,6 +43,25 @@ export default function AddCoursePage() {
 
   const removeVideoField = (index: number) => {
     setVideos(videos.filter((_, i) => i !== index))
+  }
+
+  const handlePdfChange = (index: number, field: string, value: string) => {
+    const newPdfs = [...pdfs]
+    newPdfs[index] = { ...newPdfs[index], [field]: value }
+    setPdfs(newPdfs)
+  }
+
+  const addPdfField = () => {
+    setPdfs([...pdfs, { title: '', url: '' }])
+  }
+
+  const removePdfField = (index: number) => {
+    setPdfs(pdfs.filter((_, i) => i !== index))
+  }
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/auth/login')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,6 +109,23 @@ export default function AddCoursePage() {
         if (videoError) throw videoError
       }
 
+      const pdfInserts = pdfs
+        .filter(pdf => pdf.title && pdf.url)
+        .map((pdf, index) => ({
+          course_id: courseRes.id,
+          title: pdf.title,
+          file_url: pdf.url,
+          sequence_order: index,
+        }))
+
+      if (pdfInserts.length > 0) {
+        const { error: pdfError } = await supabase
+          .from('course_materials')
+          .insert(pdfInserts)
+
+        if (pdfError) throw pdfError
+      }
+
       router.push('/admin/courses')
     } catch (err) {
       console.error('Error creating course:', err)
@@ -108,21 +147,13 @@ export default function AddCoursePage() {
             <Link href="/admin/dashboard" className="text-foreground hover:text-primary transition">
               Dashboard
             </Link>
-            <form
-              action={async () => {
-                'use server'
-                const client = await createClient()
-                await client.auth.signOut()
-              }}
-              method="POST"
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition"
             >
-              <button
-                type="submit"
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition"
-              >
-                Sign Out
-              </button>
-            </form>
+              Sign Out
+            </button>
           </div>
         </div>
       </nav>
@@ -261,6 +292,67 @@ export default function AddCoursePage() {
                 className="w-full border-border text-primary hover:bg-primary/10"
               >
                 + Add Another Video
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border">
+            <CardHeader>
+              <CardTitle className="text-foreground">Course PDFs</CardTitle>
+              <CardDescription>Add PDF notes, papers, or handouts</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {pdfs.map((pdf, index) => (
+                <div key={index} className="space-y-3 p-4 bg-secondary/10 rounded-lg border border-border">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-semibold text-foreground">PDF {index + 1}</h4>
+                    {pdfs.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removePdfField(index)}
+                        className="text-destructive hover:text-destructive/80 text-sm"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor={`pdf-title-${index}`} className="text-sm font-medium text-foreground">
+                      PDF Title
+                    </label>
+                    <Input
+                      id={`pdf-title-${index}`}
+                      value={pdf.title}
+                      onChange={e => handlePdfChange(index, 'title', e.target.value)}
+                      placeholder="Lesson notes"
+                      className="bg-background border-border text-foreground"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor={`pdf-url-${index}`} className="text-sm font-medium text-foreground">
+                      PDF Link
+                    </label>
+                    <Input
+                      id={`pdf-url-${index}`}
+                      type="url"
+                      value={pdf.url}
+                      onChange={e => handlePdfChange(index, 'url', e.target.value)}
+                      placeholder="https://..."
+                      className="bg-background border-border text-foreground"
+                    />
+                  </div>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addPdfField}
+                className="w-full border-border text-primary hover:bg-primary/10"
+              >
+                + Add Another PDF
               </Button>
             </CardContent>
           </Card>
