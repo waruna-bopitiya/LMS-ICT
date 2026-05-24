@@ -19,6 +19,10 @@ export default async function StudentDashboard() {
   // Get user profile
   const userProfile = await requireCompletedProfile(supabase, user.id)
 
+  if (userProfile?.is_admin) {
+    redirect('/admin/dashboard')
+  }
+
   // Get all enrollments for this user
   const { data: enrollments } = await supabase
     .from('enrollments')

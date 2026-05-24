@@ -18,12 +18,36 @@ export async function POST(request: NextRequest) {
     const school = String(body.school || '').trim()
     const district = String(body.district || '').trim()
     const guardianPhone = String(body.guardianPhone || '').trim()
+    const password = String(body.password || '')
+    const confirmPassword = String(body.confirmPassword || '')
 
     if (!fullName || !district) {
       return NextResponse.json(
         { error: 'Full name and district are required' },
         { status: 400 }
       )
+    }
+
+    if (!password || password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password must be at least 6 characters' },
+        { status: 400 }
+      )
+    }
+
+    if (password !== confirmPassword) {
+      return NextResponse.json(
+        { error: 'Passwords do not match' },
+        { status: 400 }
+      )
+    }
+
+    const { error: passwordError } = await supabase.auth.updateUser({
+      password,
+    })
+
+    if (passwordError) {
+      return NextResponse.json({ error: passwordError.message }, { status: 500 })
     }
 
     const { error } = await supabase
@@ -35,6 +59,7 @@ export async function POST(request: NextRequest) {
         district,
         guardian_phone: guardianPhone || null,
         profile_completed_at: new Date().toISOString(),
+        password_set_at: new Date().toISOString(),
       })
       .eq('id', user.id)
 

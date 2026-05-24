@@ -16,6 +16,8 @@ export default function StudentProfilePage() {
     school: '',
     district: '',
     guardianPhone: '',
+    password: '',
+    confirmPassword: '',
   })
 
   const updateField = (field: keyof typeof form, value: string) => {
@@ -83,6 +85,36 @@ export default function StudentProfilePage() {
                 value={form.district}
                 onChange={e => updateField('district', e.target.value)}
                 required
+                className="bg-secondary/10 border-border text-foreground"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium text-foreground">
+                New Password *
+              </label>
+              <Input
+                id="password"
+                type="password"
+                value={form.password}
+                onChange={e => updateField('password', e.target.value)}
+                required
+                minLength={6}
+                className="bg-secondary/10 border-border text-foreground"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+                Confirm Password *
+              </label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={form.confirmPassword}
+                onChange={e => updateField('confirmPassword', e.target.value)}
+                required
+                minLength={6}
                 className="bg-secondary/10 border-border text-foreground"
               />
             </div>

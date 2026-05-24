@@ -11,6 +11,19 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser()
 
+  let dashboardHref = '/student/dashboard'
+  if (user) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.is_admin) {
+      dashboardHref = '/admin/dashboard'
+    }
+  }
+
   // Get all courses
   const { data: courses } = await supabase
     .from('courses')
@@ -28,7 +41,7 @@ export default async function Home() {
           <div className="flex items-center gap-4">
             {user ? (
               <>
-                <Link href="/student/dashboard" className="text-foreground hover:text-primary transition">
+                <Link href={dashboardHref} className="text-foreground hover:text-primary transition">
                   Dashboard
                 </Link>
                 <form

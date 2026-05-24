@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     // Upload to Vercel Blob
     const filename = `bank-slips/${user.id}/${courseId}/${Date.now()}-${file.name}`
     const blob = await put(filename, file, {
-      access: 'private',
+      access: 'public',
     })
 
     // Create payment record in database

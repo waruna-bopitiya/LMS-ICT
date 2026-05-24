@@ -225,7 +225,7 @@ export default function AddCoursePage() {
           <Card className="border-border">
             <CardHeader>
               <CardTitle className="text-foreground">Course Videos</CardTitle>
-              <CardDescription>Add YouTube videos to your course</CardDescription>
+            <CardDescription>Add YouTube, Vimeo, or uploaded video links to your course</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {videos.map((video, index) => (
@@ -258,13 +258,13 @@ export default function AddCoursePage() {
 
                   <div className="space-y-2">
                     <label htmlFor={`url-${index}`} className="text-sm font-medium text-foreground">
-                      YouTube URL
+                      Video URL
                     </label>
                     <Input
                       id={`url-${index}`}
                       value={video.youtubeUrl}
                       onChange={e => handleVideoChange(index, 'youtubeUrl', e.target.value)}
-                      placeholder="https://www.youtube.com/watch?v=..."
+                      placeholder="https://..."
                       className="bg-background border-border text-foreground"
                     />
                   </div>

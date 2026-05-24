@@ -54,11 +54,18 @@ export async function POST(request: NextRequest) {
 
     const { data: existingProfile } = await admin
       .from('users')
-      .select('id')
+      .select('id, password_set_at, profile_completed_at')
       .eq('phone_number', normalizedPhone)
       .single()
 
     let userId = existingProfile?.id
+
+    if (existingProfile?.password_set_at && existingProfile?.profile_completed_at) {
+      return NextResponse.json(
+        { error: 'This account already uses password login' },
+        { status: 400 }
+      )
+    }
 
     if (!userId) {
       const { data: created, error: createError } =

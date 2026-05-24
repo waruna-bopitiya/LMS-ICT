@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 
 interface Payment {
   id: string
@@ -105,6 +104,11 @@ export default function AdminPaymentsPage() {
     }
   }
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -117,21 +121,13 @@ export default function AdminPaymentsPage() {
             <Link href="/admin/dashboard" className="text-foreground hover:text-primary transition">
               Dashboard
             </Link>
-            <form
-              action={async () => {
-                'use server'
-                const client = await createClient()
-                await client.auth.signOut()
-              }}
-              method="POST"
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition"
             >
-              <button
-                type="submit"
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition"
-              >
-                Sign Out
-              </button>
-            </form>
+              Sign Out
+            </button>
           </div>
         </div>
       </nav>

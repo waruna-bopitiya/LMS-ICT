@@ -13,3 +13,6 @@ update public.users
 set is_admin = true
 where phone_number = '+947XXXXXXXX';
 ```
+
+Admin users log in with the same OTP page at `/auth/login`, then open
+`/admin/dashboard`.

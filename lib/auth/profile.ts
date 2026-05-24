@@ -10,6 +10,7 @@ export type UserProfile = {
   district: string | null
   guardian_phone: string | null
   is_admin: boolean | null
+  password_set_at: string | null
 }
 
 export async function requireCompletedProfile(
@@ -19,12 +20,12 @@ export async function requireCompletedProfile(
   const { data: profile } = await supabase
     .from('users')
     .select(
-      'id, phone_number, full_name, email, school, district, guardian_phone, is_admin'
+      'id, phone_number, full_name, email, school, district, guardian_phone, is_admin, password_set_at'
     )
     .eq('id', userId)
     .single<UserProfile>()
 
-  if (!profile?.is_admin && !profile?.full_name) {
+  if (!profile?.is_admin && (!profile?.full_name || !profile?.password_set_at)) {
     redirect('/student/profile')
   }
 

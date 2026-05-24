@@ -1,0 +1,451 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+
+type Course = {
+  id: string
+  title: string
+  description: string | null
+  price: number
+}
+
+type Video = {
+  id: string
+  title: string
+  youtube_url: string
+  duration_seconds: number
+}
+
+type Material = {
+  id: string
+  title: string
+  file_url: string
+}
+
+type Assignment = {
+  id: string
+  title: string
+  instructions: string | null
+  due_at: string | null
+  assignment_submissions?: Array<{
+    id: string
+    answer_text: string | null
+    file_url: string | null
+    submitted_at: string
+    users: { full_name: string | null; phone_number: string | null } | null
+  }>
+}
+
+export default function AdminCourseManager({
+  course,
+  videos,
+  materials,
+  assignments,
+}: {
+  course: Course
+  videos: Video[]
+  materials: Material[]
+  assignments: Assignment[]
+}) {
+  const router = useRouter()
+  const supabase = createClient()
+  const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [courseForm, setCourseForm] = useState({
+    title: course.title,
+    description: course.description || '',
+    price: String(course.price),
+  })
+  const [videoForm, setVideoForm] = useState({
+    title: '',
+    url: '',
+    duration: '',
+  })
+  const [materialForm, setMaterialForm] = useState({
+    title: '',
+    url: '',
+  })
+  const [assignmentForm, setAssignmentForm] = useState({
+    title: '',
+    instructions: '',
+    dueAt: '',
+  })
+  const [manualPhone, setManualPhone] = useState('')
+
+  const uploadFile = async (file: File, type: string) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('courseId', course.id)
+    formData.append('type', type)
+
+    setUploading(true)
+    try {
+      const response = await fetch('/api/admin/uploads', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Upload failed')
+      return data.url as string
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const saveCourse = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .update({
+          title: courseForm.title,
+          description: courseForm.description || null,
+          price: Number(courseForm.price),
+        })
+        .eq('id', course.id)
+      if (error) throw error
+      router.refresh()
+    } catch (error) {
+      console.error(error)
+      alert('Failed to save class')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const addVideo = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const { error } = await supabase.from('videos').insert({
+        course_id: course.id,
+        title: videoForm.title,
+        youtube_url: videoForm.url,
+        duration_seconds: Number(videoForm.duration) || 0,
+        sequence_order: videos.length,
+      })
+      if (error) throw error
+      setVideoForm({ title: '', url: '', duration: '' })
+      router.refresh()
+    } catch (error) {
+      console.error(error)
+      alert('Failed to add video')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const addMaterial = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const { error } = await supabase.from('course_materials').insert({
+        course_id: course.id,
+        title: materialForm.title,
+        file_url: materialForm.url,
+        sequence_order: materials.length,
+      })
+      if (error) throw error
+      setMaterialForm({ title: '', url: '' })
+      router.refresh()
+    } catch (error) {
+      console.error(error)
+      alert('Failed to add PDF')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const addAssignment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const { error } = await supabase.from('assignments').insert({
+        course_id: course.id,
+        title: assignmentForm.title,
+        instructions: assignmentForm.instructions || null,
+        due_at: assignmentForm.dueAt ? new Date(assignmentForm.dueAt).toISOString() : null,
+      })
+      if (error) throw error
+      setAssignmentForm({ title: '', instructions: '', dueAt: '' })
+      router.refresh()
+    } catch (error) {
+      console.error(error)
+      alert('Failed to create submission')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const activateStudent = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const response = await fetch('/api/admin/manual-enroll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: manualPhone,
+          courseId: course.id,
+        }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to activate student')
+      }
+
+      setManualPhone('')
+      alert('Student activated for this class')
+      router.refresh()
+    } catch (error) {
+      console.error(error)
+      alert(error instanceof Error ? error.message : 'Failed to activate student')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-8">
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle>Class Details</CardTitle>
+          <CardDescription>Class name, description, and payment amount</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={saveCourse} className="grid gap-4 sm:grid-cols-2">
+            <Input
+              value={courseForm.title}
+              onChange={e => setCourseForm(prev => ({ ...prev, title: e.target.value }))}
+              required
+              placeholder="Class title"
+              className="bg-secondary/10 border-border text-foreground"
+            />
+            <Input
+              type="number"
+              step="0.01"
+              value={courseForm.price}
+              onChange={e => setCourseForm(prev => ({ ...prev, price: e.target.value }))}
+              required
+              placeholder="Payment amount"
+              className="bg-secondary/10 border-border text-foreground"
+            />
+            <Textarea
+              value={courseForm.description}
+              onChange={e => setCourseForm(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Class description"
+              className="sm:col-span-2 bg-secondary/10 border-border text-foreground"
+            />
+            <Button disabled={saving} className="sm:col-span-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+              {saving ? 'Saving...' : 'Save Class'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle>Manual Student Activation</CardTitle>
+          <CardDescription>Mark a registered student as paid and active without a bank slip</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={activateStudent} className="grid gap-3 sm:grid-cols-[1fr_auto]">
+            <Input
+              type="tel"
+              value={manualPhone}
+              onChange={e => setManualPhone(e.target.value)}
+              required
+              placeholder="Student phone number"
+              className="bg-secondary/10 border-border text-foreground"
+            />
+            <Button
+              disabled={saving || !manualPhone}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              {saving ? 'Activating...' : 'Activate as Paid'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-8 lg:grid-cols-2">
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle>Videos</CardTitle>
+            <CardDescription>Upload video files for stronger protection, or paste an embeddable video link</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <form onSubmit={addVideo} className="space-y-3">
+              <Input
+                value={videoForm.title}
+                onChange={e => setVideoForm(prev => ({ ...prev, title: e.target.value }))}
+                required
+                placeholder="Video title"
+                className="bg-secondary/10 border-border text-foreground"
+              />
+              <Input
+                value={videoForm.url}
+                onChange={e => setVideoForm(prev => ({ ...prev, url: e.target.value }))}
+                required
+                placeholder="Video URL or uploaded file URL"
+                className="bg-secondary/10 border-border text-foreground"
+              />
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <Input
+                  type="number"
+                  value={videoForm.duration}
+                  onChange={e => setVideoForm(prev => ({ ...prev, duration: e.target.value }))}
+                  placeholder="Duration seconds"
+                  className="bg-secondary/10 border-border text-foreground"
+                />
+                <Input
+                  type="file"
+                  accept="video/*"
+                  onChange={async e => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const url = await uploadFile(file, 'videos')
+                    setVideoForm(prev => ({ ...prev, url }))
+                  }}
+                  className="bg-secondary/10 border-border text-foreground"
+                />
+              </div>
+              <Button disabled={saving || uploading} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                {uploading ? 'Uploading...' : 'Add Video'}
+              </Button>
+            </form>
+
+            <div className="space-y-2">
+              {videos.map(video => (
+                <div key={video.id} className="flex items-center justify-between rounded-md border border-border p-3">
+                  <span className="text-sm text-foreground">{video.title}</span>
+                  <Badge variant="secondary">{video.duration_seconds ? `${Math.round(video.duration_seconds / 60)}m` : 'Video'}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle>PDFs</CardTitle>
+            <CardDescription>Upload notes or paste a PDF link</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <form onSubmit={addMaterial} className="space-y-3">
+              <Input
+                value={materialForm.title}
+                onChange={e => setMaterialForm(prev => ({ ...prev, title: e.target.value }))}
+                required
+                placeholder="PDF title"
+                className="bg-secondary/10 border-border text-foreground"
+              />
+              <Input
+                value={materialForm.url}
+                onChange={e => setMaterialForm(prev => ({ ...prev, url: e.target.value }))}
+                required
+                placeholder="PDF URL or uploaded file URL"
+                className="bg-secondary/10 border-border text-foreground"
+              />
+              <Input
+                type="file"
+                accept="application/pdf"
+                onChange={async e => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const url = await uploadFile(file, 'pdfs')
+                  setMaterialForm(prev => ({ ...prev, url }))
+                }}
+                className="bg-secondary/10 border-border text-foreground"
+              />
+              <Button disabled={saving || uploading} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                {uploading ? 'Uploading...' : 'Add PDF'}
+              </Button>
+            </form>
+
+            <div className="space-y-2">
+              {materials.map(material => (
+                <a key={material.id} href={material.file_url} target="_blank" rel="noreferrer" className="block rounded-md border border-border p-3 text-sm text-foreground hover:bg-secondary/10">
+                  {material.title}
+                </a>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle>Submissions</CardTitle>
+          <CardDescription>Create work for students and review their answers</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <form onSubmit={addAssignment} className="grid gap-3 md:grid-cols-2">
+            <Input
+              value={assignmentForm.title}
+              onChange={e => setAssignmentForm(prev => ({ ...prev, title: e.target.value }))}
+              required
+              placeholder="Submission title"
+              className="bg-secondary/10 border-border text-foreground"
+            />
+            <Input
+              type="datetime-local"
+              value={assignmentForm.dueAt}
+              onChange={e => setAssignmentForm(prev => ({ ...prev, dueAt: e.target.value }))}
+              className="bg-secondary/10 border-border text-foreground"
+            />
+            <Textarea
+              value={assignmentForm.instructions}
+              onChange={e => setAssignmentForm(prev => ({ ...prev, instructions: e.target.value }))}
+              placeholder="Instructions"
+              className="md:col-span-2 bg-secondary/10 border-border text-foreground"
+            />
+            <Button disabled={saving} className="md:col-span-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+              Create Submission
+            </Button>
+          </form>
+
+          <div className="space-y-4">
+            {assignments.map(assignment => (
+              <div key={assignment.id} className="rounded-md border border-border p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-foreground">{assignment.title}</h3>
+                    {assignment.instructions && (
+                      <p className="mt-1 text-sm text-muted-foreground">{assignment.instructions}</p>
+                    )}
+                  </div>
+                  <Badge variant="outline">{assignment.assignment_submissions?.length || 0} submitted</Badge>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {assignment.assignment_submissions?.map(submission => (
+                    <div key={submission.id} className="rounded-md bg-secondary/10 p-3 text-sm">
+                      <div className="font-medium text-foreground">
+                        {submission.users?.full_name || 'Student'} ({submission.users?.phone_number || 'No phone'})
+                      </div>
+                      {submission.answer_text && <p className="mt-1 text-muted-foreground">{submission.answer_text}</p>}
+                      {submission.file_url && (
+                        <a href={submission.file_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-primary">
+                          Open submitted file
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

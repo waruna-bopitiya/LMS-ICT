@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { redirect } from 'next/navigation'
 import EnrollmentForm from '@/components/EnrollmentForm'
 import { requireCompletedProfile } from '@/lib/auth/profile'
+import StudentSubmissionForm from '@/components/StudentSubmissionForm'
 
 export default async function CoursePage({
   params,
@@ -66,6 +67,12 @@ export default async function CoursePage({
     .select('*')
     .eq('course_id', id)
     .order('sequence_order', { ascending: true })
+
+  const { data: assignments } = await supabase
+    .from('assignments')
+    .select('*, assignment_submissions(id, user_id, answer_text, file_url, submitted_at)')
+    .eq('course_id', id)
+    .order('created_at', { ascending: false })
 
   return (
     <div className="min-h-screen bg-background">
@@ -178,6 +185,50 @@ export default async function CoursePage({
                     </div>
                   ) : (
                     <p className="text-muted-foreground">No PDFs available for this course yet.</p>
+                  )}
+                </section>
+
+                <section>
+                  <h2 className="text-2xl font-bold text-foreground mb-6">Submissions</h2>
+                  {assignments && assignments.length > 0 ? (
+                    <div className="space-y-4">
+                      {assignments.map((assignment) => {
+                        const ownSubmission = assignment.assignment_submissions?.find(
+                          (submission: { user_id: string }) => submission.user_id === user.id
+                        )
+
+                        return (
+                          <Card key={assignment.id} className="border-border">
+                            <CardHeader>
+                              <CardTitle className="text-foreground">{assignment.title}</CardTitle>
+                              <CardDescription>
+                                {assignment.due_at
+                                  ? `Due: ${new Date(assignment.due_at).toLocaleString()}`
+                                  : 'No due date'}
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              {assignment.instructions && (
+                                <p className="text-sm text-muted-foreground mb-4">
+                                  {assignment.instructions}
+                                </p>
+                              )}
+                              {ownSubmission && (
+                                <div className="rounded-md border border-green-500/20 bg-green-500/10 p-3 text-sm text-green-600 dark:text-green-400">
+                                  Submitted on {new Date(ownSubmission.submitted_at).toLocaleString()}
+                                </div>
+                              )}
+                              <StudentSubmissionForm
+                                assignmentId={assignment.id}
+                                submitted={Boolean(ownSubmission)}
+                              />
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">No submissions available for this course yet.</p>
                   )}
                 </section>
               </div>
