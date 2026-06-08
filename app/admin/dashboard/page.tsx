@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
+import Navbar from '@/components/Navbar'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
@@ -35,33 +36,13 @@ export default async function AdminDashboard() {
     .eq('status', 'pending')
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      
+      {/* Background patterns */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
+      
       {/* Navigation */}
-      <nav className="bg-secondary/5 border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <Link href="/admin/dashboard" className="text-2xl font-bold text-primary">
-            Admin LMS
-          </Link>
-          <div className="flex items-center gap-4">
-            <form
-              action={async () => {
-                'use server'
-                const client = await createClient()
-                await client.auth.signOut()
-                redirect('/auth/login')
-              }}
-              method="POST"
-            >
-              <button
-                type="submit"
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition"
-              >
-                Sign Out
-              </button>
-            </form>
-          </div>
-        </div>
-      </nav>
+      <Navbar user={user} isAdmin={true} fullName="Administrator" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}

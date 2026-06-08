@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { put } from '@vercel/blob'
+import { uploadToSupabase } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -29,11 +29,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Upload to Vercel Blob
+    // Upload to Supabase Storage
     const filename = `bank-slips/${user.id}/${courseId}/${Date.now()}-${file.name}`
-    const blob = await put(filename, file, {
-      access: 'public',
-    })
+    const publicUrl = await uploadToSupabase(file, filename)
 
     // Create payment record in database
     const { data: paymentData, error: paymentError } = await supabase
@@ -41,10 +39,11 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         course_id: courseId,
-        bank_slip_url: blob.url,
+        bank_slip_url: publicUrl,
         amount: parseFloat(amount),
         status: 'pending',
       })
+
       .select()
       .single()
 

@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { parseCourseDescription, formatCourseDescription } from '@/lib/utils'
+import { Image as ImageIcon, Upload } from 'lucide-react'
 
 type Course = {
   id: string
@@ -58,15 +60,18 @@ export default function AdminCourseManager({
   const supabase = createClient()
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const parsedDesc = parseCourseDescription(course.description)
   const [courseForm, setCourseForm] = useState({
     title: course.title,
-    description: course.description || '',
+    description: parsedDesc.description,
     price: String(course.price),
+    imageUrl: parsedDesc.imageUrl || '',
   })
   const [videoForm, setVideoForm] = useState({
     title: '',
     url: '',
     duration: '',
+    thumbnailUrl: '',
   })
   const [materialForm, setMaterialForm] = useState({
     title: '',
@@ -103,11 +108,12 @@ export default function AdminCourseManager({
     e.preventDefault()
     setSaving(true)
     try {
+      const combinedDescription = formatCourseDescription(courseForm.description, courseForm.imageUrl || null)
       const { error } = await supabase
         .from('courses')
         .update({
           title: courseForm.title,
-          description: courseForm.description || null,
+          description: combinedDescription || null,
           price: Number(courseForm.price),
         })
         .eq('id', course.id)
@@ -125,15 +131,16 @@ export default function AdminCourseManager({
     e.preventDefault()
     setSaving(true)
     try {
+      const combinedTitle = formatVideoTitle(videoForm.title, videoForm.thumbnailUrl || null)
       const { error } = await supabase.from('videos').insert({
         course_id: course.id,
-        title: videoForm.title,
+        title: combinedTitle,
         youtube_url: videoForm.url,
         duration_seconds: Number(videoForm.duration) || 0,
         sequence_order: videos.length,
       })
       if (error) throw error
-      setVideoForm({ title: '', url: '', duration: '' })
+      setVideoForm({ title: '', url: '', duration: '', thumbnailUrl: '' })
       router.refresh()
     } catch (error) {
       console.error(error)
@@ -223,30 +230,93 @@ export default function AdminCourseManager({
         </CardHeader>
         <CardContent>
           <form onSubmit={saveCourse} className="grid gap-4 sm:grid-cols-2">
-            <Input
-              value={courseForm.title}
-              onChange={e => setCourseForm(prev => ({ ...prev, title: e.target.value }))}
-              required
-              placeholder="Class title"
-              className="bg-secondary/10 border-border text-foreground"
-            />
-            <Input
-              type="number"
-              step="0.01"
-              value={courseForm.price}
-              onChange={e => setCourseForm(prev => ({ ...prev, price: e.target.value }))}
-              required
-              placeholder="Payment amount"
-              className="bg-secondary/10 border-border text-foreground"
-            />
-            <Textarea
-              value={courseForm.description}
-              onChange={e => setCourseForm(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Class description"
-              className="sm:col-span-2 bg-secondary/10 border-border text-foreground"
-            />
-            <Button disabled={saving} className="sm:col-span-2 bg-primary hover:bg-primary/90 text-primary-foreground">
-              {saving ? 'Saving...' : 'Save Class'}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Class Title</label>
+              <Input
+                value={courseForm.title}
+                onChange={e => setCourseForm(prev => ({ ...prev, title: e.target.value }))}
+                required
+                placeholder="Class title"
+                className="bg-secondary/10 border-border text-foreground"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Payment Amount (LKR)</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={courseForm.price}
+                onChange={e => setCourseForm(prev => ({ ...prev, price: e.target.value }))}
+                required
+                placeholder="Payment amount"
+                className="bg-secondary/10 border-border text-foreground"
+              />
+            </div>
+
+            {/* Course Cover Photo Uploader */}
+            <div className="sm:col-span-2 grid sm:grid-cols-[150px_1fr] gap-4 items-center border border-border/60 p-4 rounded-xl bg-secondary/5">
+              <div className="relative h-[100px] w-full sm:w-[150px] rounded-lg border border-border/80 bg-secondary/20 flex items-center justify-center overflow-hidden">
+                {courseForm.imageUrl ? (
+                  <img
+                    src={courseForm.imageUrl}
+                    alt="Course cover preview"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="text-center text-muted-foreground">
+                    <ImageIcon className="h-8 w-8 mx-auto opacity-40 mb-1" />
+                    <span className="text-[10px] uppercase font-bold tracking-wider">No Photo</span>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-3 w-full">
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <Upload className="h-3.5 w-3.5 text-primary" />
+                  Course Cover Photo
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1 relative">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={async e => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        try {
+                          const url = await uploadFile(file, 'course-image')
+                          setCourseForm(prev => ({ ...prev, imageUrl: url }))
+                        } catch (err) {
+                          alert(err instanceof Error ? err.message : 'Upload failed')
+                        }
+                      }}
+                      className="bg-secondary/10 border-border text-foreground cursor-pointer"
+                    />
+                    {uploading && (
+                      <span className="absolute right-3 top-2 text-xs font-semibold text-primary animate-pulse">Uploading...</span>
+                    )}
+                  </div>
+                  <Input
+                    type="text"
+                    value={courseForm.imageUrl}
+                    onChange={e => setCourseForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                    placeholder="Or paste image URL directly..."
+                    className="bg-secondary/10 border-border text-foreground flex-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="sm:col-span-2 space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Class Description</label>
+              <Textarea
+                value={courseForm.description}
+                onChange={e => setCourseForm(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Class description"
+                className="bg-secondary/10 border-border text-foreground h-28"
+              />
+            </div>
+            <Button disabled={saving || uploading} className="sm:col-span-2 bg-primary hover:bg-primary/95 text-primary-foreground font-semibold h-11 rounded-xl">
+              {saving ? 'Saving...' : 'Save Class Details'}
             </Button>
           </form>
         </CardContent>
@@ -299,6 +369,45 @@ export default function AdminCourseManager({
                 placeholder="Video URL or uploaded file URL"
                 className="bg-secondary/10 border-border text-foreground"
               />
+
+              {/* Video cover thumbnail uploader */}
+              <div className="grid sm:grid-cols-[1fr_auto] gap-2 items-center border border-border/40 p-3 rounded-lg bg-secondary/5">
+                <div className="space-y-2 flex-1">
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Video Thumbnail Image</span>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={async e => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          try {
+                            const url = await uploadFile(file, 'video-thumbnail')
+                            setVideoForm(prev => ({ ...prev, thumbnailUrl: url }))
+                          } catch (err) {
+                            alert(err instanceof Error ? err.message : 'Upload failed')
+                          }
+                        }}
+                        className="bg-secondary/10 border-border text-foreground cursor-pointer h-9 text-xs"
+                      />
+                    </div>
+                    <Input
+                      type="text"
+                      value={videoForm.thumbnailUrl}
+                      onChange={e => setVideoForm(prev => ({ ...prev, thumbnailUrl: e.target.value }))}
+                      placeholder="Paste thumbnail URL..."
+                      className="bg-secondary/10 border-border text-foreground flex-1 h-9 text-xs"
+                    />
+                  </div>
+                </div>
+                {videoForm.thumbnailUrl && (
+                  <div className="w-14 h-9 rounded overflow-hidden border border-border shrink-0 self-end">
+                    <img src={videoForm.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+              </div>
+
               <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                 <Input
                   type="number"
@@ -319,18 +428,28 @@ export default function AdminCourseManager({
                   className="bg-secondary/10 border-border text-foreground"
                 />
               </div>
-              <Button disabled={saving || uploading} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button disabled={saving || uploading} className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold h-11 rounded-xl">
                 {uploading ? 'Uploading...' : 'Add Video'}
               </Button>
             </form>
 
             <div className="space-y-2">
-              {videos.map(video => (
-                <div key={video.id} className="flex items-center justify-between rounded-md border border-border p-3">
-                  <span className="text-sm text-foreground">{video.title}</span>
-                  <Badge variant="secondary">{video.duration_seconds ? `${Math.round(video.duration_seconds / 60)}m` : 'Video'}</Badge>
-                </div>
-              ))}
+              {videos.map(video => {
+                const { title: cleanVideoTitle, thumbnailUrl } = parseVideoTitle(video.title)
+                return (
+                  <div key={video.id} className="flex items-center justify-between rounded-md border border-border p-3 bg-secondary/5 hover:border-primary/20 transition-all">
+                    <div className="flex items-center gap-3">
+                      {thumbnailUrl && (
+                        <div className="w-10 h-7 rounded overflow-hidden border border-border/40 shrink-0">
+                          <img src={thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <span className="text-sm font-semibold text-foreground">{cleanVideoTitle}</span>
+                    </div>
+                    <Badge variant="secondary" className="font-semibold">{video.duration_seconds ? `${Math.round(video.duration_seconds / 60)}m` : 'Video'}</Badge>
+                  </div>
+                )
+              })}
             </div>
           </CardContent>
         </Card>

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
+import Navbar from '@/components/Navbar'
 
 export default async function AdminCoursesPage() {
   const supabase = await createClient()
@@ -33,45 +34,22 @@ export default async function AdminCoursesPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      
+      {/* Background patterns */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
+      
       {/* Navigation */}
-      <nav className="bg-secondary/5 border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <Link href="/admin/dashboard" className="text-2xl font-bold text-primary">
-            Admin LMS
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/admin/dashboard" className="text-foreground hover:text-primary transition">
-              Dashboard
-            </Link>
-            <form
-              action={async () => {
-                'use server'
-                const client = await createClient()
-                await client.auth.signOut()
-                redirect('/auth/login')
-              }}
-              method="POST"
-            >
-              <button
-                type="submit"
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition"
-              >
-                Sign Out
-              </button>
-            </form>
-          </div>
-        </div>
-      </nav>
+      <Navbar user={user} isAdmin={true} fullName="Administrator" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">Manage Courses</h1>
-            <p className="text-muted-foreground">Create, edit, and manage your courses</p>
+            <h1 className="text-4xl font-extrabold text-foreground mb-2">Manage Courses</h1>
+            <p className="text-muted-foreground">Create, edit, and manage your courses syllabus</p>
           </div>
           <Link href="/admin/add-course">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground px-6">
+            <Button className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-6 rounded-xl h-11">
               + Create Course
             </Button>
           </Link>
@@ -81,47 +59,45 @@ export default async function AdminCoursesPage() {
           <div className="grid gap-6">
             {courses.map((course) => (
               <Link key={course.id} href={`/admin/courses/${course.id}`}>
-                <Card className="border-border hover:shadow-lg hover:shadow-primary/10 transition cursor-pointer">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
+                <Card className="glass-panel border-border hover:shadow-md hover:border-primary/30 transition-all duration-300 cursor-pointer rounded-2xl overflow-hidden group">
+                  <CardHeader className="p-6">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                       <div className="flex-1">
-                        <CardTitle className="text-foreground text-xl">
+                        <CardTitle className="text-foreground text-xl font-bold group-hover:text-primary transition-colors">
                           {course.title}
                         </CardTitle>
-                        <CardDescription className="mt-1">
-                          {course.description || 'No description'}
+                        <CardDescription className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                          {course.description || 'No description available.'}
                         </CardDescription>
                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-primary">
-                          ${Number(course.price).toFixed(2)}
+                      <div className="text-left sm:text-right shrink-0">
+                        <div className="text-2xl font-extrabold text-primary">
+                          Rs. {Number(course.price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </div>
-                        <p className="text-xs text-muted-foreground">Price</p>
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Course Fee</p>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-muted-foreground">
-                        Created: {new Date(course.created_at).toLocaleDateString()}
-                      </div>
-                      <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                        Edit Course
-                      </Button>
+                  <CardContent className="p-6 pt-0 border-t border-border/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="text-xs text-muted-foreground font-medium">
+                      Created: {new Date(course.created_at).toLocaleDateString()}
                     </div>
+                    <Button variant="outline" className="border-border text-foreground hover:bg-secondary font-semibold rounded-xl h-9">
+                      Manage Course Contents
+                    </Button>
                   </CardContent>
                 </Card>
               </Link>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-semibold text-foreground mb-4">No Courses Yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Create your first course to get started
+          <div className="glass-panel text-center py-16 px-6 max-w-md mx-auto rounded-2xl">
+            <h3 className="text-xl font-bold text-foreground mb-2">No Courses Yet</h3>
+            <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+              Create your first ICT syllabus course module to get started.
             </p>
             <Link href="/admin/add-course">
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold rounded-xl px-6 h-11">
                 Create Course
               </Button>
             </Link>

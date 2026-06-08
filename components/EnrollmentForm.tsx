@@ -124,11 +124,11 @@ export default function EnrollmentForm({
 
           <div className="pt-2">
             <p className="text-xs text-muted-foreground mb-4">
-              Transfer ${Number(coursePrice).toFixed(2)} to the account above, then upload proof of payment.
+              Transfer Rs. {Number(coursePrice).toLocaleString('en-US', { minimumFractionDigits: 2 })} to the account above, then upload proof of payment.
             </p>
             <Button
               onClick={() => setStep('upload')}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold rounded-xl"
             >
               Upload Payment Proof
             </Button>

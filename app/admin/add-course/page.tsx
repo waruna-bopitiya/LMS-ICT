@@ -1,18 +1,30 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
+import Navbar from '@/components/Navbar'
 
 export default function AddCoursePage() {
   const router = useRouter()
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) {
+        router.push('/auth/login')
+      } else {
+        setUser(data.user)
+      }
+    })
+  }, [])
 
   const [courseData, setCourseData] = useState({
     title: '',
@@ -59,19 +71,14 @@ export default function AddCoursePage() {
     setPdfs(pdfs.filter((_, i) => i !== index))
   }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/auth/login')
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (!currentUser) {
         router.push('/auth/login')
         return
       }
@@ -83,7 +90,7 @@ export default function AddCoursePage() {
           title: courseData.title,
           description: courseData.description,
           price: parseFloat(courseData.price),
-          created_by: user.id,
+          created_by: currentUser.id,
         })
         .select()
         .single()
@@ -136,29 +143,15 @@ export default function AddCoursePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      
+      {/* Background patterns */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
+      
       {/* Navigation */}
-      <nav className="bg-secondary/5 border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <Link href="/admin/dashboard" className="text-2xl font-bold text-primary">
-            Admin LMS
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/admin/dashboard" className="text-foreground hover:text-primary transition">
-              Dashboard
-            </Link>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navbar user={user} isAdmin={true} fullName="Administrator" />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
         <div className="mb-8">
           <Link href="/admin/courses" className="text-primary hover:text-primary/80 transition mb-4 inline-block">
             ← Back to Courses
@@ -169,7 +162,7 @@ export default function AddCoursePage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Course Details */}
-          <Card className="border-border">
+          <Card className="border-border glass-panel rounded-2xl">
             <CardHeader>
               <CardTitle className="text-foreground">Course Details</CardTitle>
               <CardDescription>Basic information about your course</CardDescription>
@@ -184,7 +177,7 @@ export default function AddCoursePage() {
                   value={courseData.title}
                   onChange={e => handleCourseChange('title', e.target.value)}
                   required
-                  placeholder="e.g., Advanced JavaScript"
+                  placeholder="e.g., A/L 2026 ICT Theory"
                   className="bg-secondary/10 border-border text-foreground"
                 />
               </div>
@@ -205,7 +198,7 @@ export default function AddCoursePage() {
 
               <div className="space-y-2">
                 <label htmlFor="price" className="text-sm font-medium text-foreground">
-                  Price ($) *
+                  Price (LKR - Rs.) *
                 </label>
                 <Input
                   id="price"
@@ -214,7 +207,7 @@ export default function AddCoursePage() {
                   value={courseData.price}
                   onChange={e => handleCourseChange('price', e.target.value)}
                   required
-                  placeholder="99.99"
+                  placeholder="2500.00"
                   className="bg-secondary/10 border-border text-foreground"
                 />
               </div>

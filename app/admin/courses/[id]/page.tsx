@@ -2,6 +2,7 @@ import AdminCourseManager from '@/components/AdminCourseManager'
 import { requireAdmin } from '@/lib/auth/admin'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import Navbar from '@/components/Navbar'
 
 export default async function AdminCourseDetailPage({
   params,
@@ -9,7 +10,7 @@ export default async function AdminCourseDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const { supabase } = await requireAdmin()
+  const { supabase, user } = await requireAdmin()
 
   const { data: course } = await supabase
     .from('courses')
@@ -32,7 +33,7 @@ export default async function AdminCourseDetailPage({
     )
   }
 
-  const [{ data: videos }, { data: materials }, { data: assignments }] =
+  const [{ data: videos }, { data: materials }, { data: assignmentsData }] =
     await Promise.all([
       supabase
         .from('videos')
@@ -46,30 +47,48 @@ export default async function AdminCourseDetailPage({
         .order('sequence_order', { ascending: true }),
       supabase
         .from('assignments')
-        .select('*, assignment_submissions(*, users(full_name, phone_number))')
+        .select('*, assignment_submissions(*)')
         .eq('course_id', id)
         .order('created_at', { ascending: false }),
     ])
 
-  return (
-    <div className="min-h-screen bg-background">
-      <nav className="bg-secondary/5 border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <Link href="/admin/dashboard" className="text-2xl font-bold text-primary">
-            Admin LMS
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/admin/payments" className="text-foreground hover:text-primary transition">
-              Payments
-            </Link>
-            <Link href="/admin/courses" className="text-foreground hover:text-primary transition">
-              Classes
-            </Link>
-          </div>
-        </div>
-      </nav>
+  let assignments = assignmentsData || []
+  if (assignmentsData && assignmentsData.length > 0) {
+    const userIds = [
+      ...new Set(
+        assignmentsData
+          .flatMap(a => a.assignment_submissions || [])
+          .map(s => s.user_id)
+      ),
+    ]
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    if (userIds.length > 0) {
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('id, full_name, phone_number')
+        .in('id', userIds)
+
+      const usersMap = new Map(usersData?.map(u => [u.id, u]) || [])
+      assignments = assignmentsData.map(a => ({
+        ...a,
+        assignment_submissions: (a.assignment_submissions || []).map(s => ({
+          ...s,
+          users: usersMap.get(s.user_id) || { full_name: 'Unknown Student', phone_number: 'N/A' },
+        })),
+      }))
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      
+      {/* Background patterns */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
+      
+      {/* Navigation */}
+      <Navbar user={user} isAdmin={true} fullName="Administrator" />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
         <Link href="/admin/courses" className="text-primary hover:text-primary/80 transition mb-6 inline-block">
           Back to Classes
         </Link>

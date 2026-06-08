@@ -6,6 +6,10 @@ import { redirect } from 'next/navigation'
 import EnrollmentForm from '@/components/EnrollmentForm'
 import { requireCompletedProfile } from '@/lib/auth/profile'
 import StudentSubmissionForm from '@/components/StudentSubmissionForm'
+import Navbar from '@/components/Navbar'
+import { ChevronLeft, Play, FileText, Calendar, CheckCircle, Clock, BadgeCheck, AlertCircle } from 'lucide-react'
+import { parseCourseDescription, parseVideoTitle } from '@/lib/utils'
+import SecurePdfViewer from '@/components/SecurePdfViewer'
 
 export default async function CoursePage({
   params,
@@ -23,7 +27,8 @@ export default async function CoursePage({
     redirect('/auth/login')
   }
 
-  await requireCompletedProfile(supabase, user.id)
+  const userProfile = await requireCompletedProfile(supabase, user.id)
+  const fullName = userProfile?.full_name || ''
 
   // Get course details
   const { data: course, error: courseError } = await supabase
@@ -34,11 +39,13 @@ export default async function CoursePage({
 
   if (courseError || !course) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-foreground mb-4">Course Not Found</h1>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center max-w-sm glass-panel p-8 rounded-2xl border-border">
+          <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-foreground mb-2">Course Not Found</h1>
+          <p className="text-muted-foreground text-sm mb-6">This course syllabus may have been moved or archived.</p>
           <Link href="/">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold rounded-xl">
               Back to Courses
             </Button>
           </Link>
@@ -46,6 +53,8 @@ export default async function CoursePage({
       </div>
     )
   }
+
+  const { description: cleanDescription, imageUrl } = parseCourseDescription(course.description)
 
   // Check if user is enrolled
   const { data: enrollment } = await supabase
@@ -75,205 +84,247 @@ export default async function CoursePage({
     .order('created_at', { ascending: false })
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="bg-secondary/5 border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <Link href="/" className="text-2xl font-bold text-primary">
-            LMS
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/student/dashboard" className="text-foreground hover:text-primary transition">
-              Dashboard
-            </Link>
-            <form
-              action={async () => {
-                'use server'
-                const client = await createClient()
-                await client.auth.signOut()
-                redirect('/auth/login')
-              }}
-              method="POST"
-            >
-              <button
-                type="submit"
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition"
-              >
-                Sign Out
-              </button>
-            </form>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      
+      {/* Background patterns */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
+      <div className="absolute top-0 right-0 -z-10 h-[300px] w-[300px] rounded-full bg-primary/5 blur-[80px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Navigation */}
+      <Navbar user={user} isAdmin={false} fullName={fullName} />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
+        
+        {/* Back navigation */}
         <Link
-          href="/"
-          className="text-primary hover:text-primary/80 transition mb-8 inline-block"
+          href="/student/dashboard"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors mb-6"
         >
-          ← Back to Courses
+          <ChevronLeft className="h-4 w-4" /> Back to Dashboard
         </Link>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8 items-start">
+          
           {/* Main Content */}
-          <div className="md:col-span-2">
-            <Card className="border-border mb-8">
-              <CardHeader>
-                <CardTitle className="text-4xl text-foreground">{course.title}</CardTitle>
-                <CardDescription className="text-base mt-2">
-                  {course.description || 'No description available'}
-                </CardDescription>
-              </CardHeader>
-            </Card>
+          <div className="lg:col-span-2 space-y-8">
+            
+            {/* Header info */}
+            <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-indigo-950/20 via-slate-900/10 to-background border border-border/50 shadow-sm relative overflow-hidden">
+              <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
+              <div className="relative">
+                <span className="text-primary text-xs font-bold uppercase tracking-widest bg-primary/10 border border-primary/20 px-3 py-0.5 rounded-full inline-block mb-4">
+                  COURSE SYLLABUS
+                </span>
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground leading-tight">
+                  {course.title}
+                </h1>
+                <p className="text-muted-foreground text-sm sm:text-base mt-3 leading-relaxed">
+                  {cleanDescription || 'Access pre-recorded lectures, tutorials, notes, and submit assignments for evaluation.'}
+                </p>
+              </div>
+            </div>
 
-            {/* Videos Section */}
-            {enrollment && enrollment.status === 'active' ? (
+            {/* Locked Content Warning if not active */}
+            {(!enrollment || enrollment.status !== 'active') && (
+              <div className="p-6 rounded-2xl bg-secondary/35 border border-border/50 text-center max-w-xl mx-auto">
+                <AlertCircle className="h-10 w-10 text-muted-foreground/60 mx-auto mb-4" />
+                <h3 className="text-lg font-bold text-foreground mb-1">Content Locked</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {enrollment && enrollment.status === 'pending'
+                    ? 'Your enrollment is currently pending approval. Please wait for the admin to verify your deposit slip.'
+                    : 'You must enroll in this course to gain access to lesson videos, PDFs, and assignment submissions.'}
+                </p>
+              </div>
+            )}
+
+            {/* Videos & Materials Section (Only for active enrollment) */}
+            {enrollment && enrollment.status === 'active' && (
               <div className="space-y-10">
+                
+                {/* Videos */}
                 <section>
-                  <h2 className="text-2xl font-bold text-foreground mb-6">Course Videos</h2>
+                  <h2 className="text-2xl font-extrabold text-foreground mb-6 flex items-center gap-2">
+                    <Play className="h-5.5 w-5.5 text-primary fill-current" /> Lecture Videos
+                  </h2>
                   {videos && videos.length > 0 ? (
                     <div className="space-y-4">
-                      {videos.map((video, index) => (
-                        <Link
-                          key={video.id}
-                          href={`/student/watch/${video.id}`}
-                        >
-                          <Card className="border-border hover:shadow-lg hover:shadow-primary/10 transition cursor-pointer">
-                            <CardContent className="p-6 flex items-center gap-4">
-                              <div className="flex-shrink-0 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
-                                <span className="text-primary font-bold">{index + 1}</span>
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-foreground">{video.title}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {video.duration_seconds
-                                    ? `${Math.floor(video.duration_seconds / 60)} minutes`
-                                    : 'Duration not available'}
-                                </p>
-                              </div>
-                              <div className="text-primary font-semibold">Watch →</div>
-                            </CardContent>
-                          </Card>
-                        </Link>
-                      ))}
+                      {videos.map((video, index) => {
+                        const { title: cleanVideoTitle, thumbnailUrl: videoThumb } = parseVideoTitle(video.title)
+                        return (
+                          <Link
+                            key={video.id}
+                            href={`/student/watch/${video.id}`}
+                          >
+                            <Card className="glass-panel border-border hover:shadow-md hover:border-primary/30 transition-all duration-300 rounded-xl overflow-hidden cursor-pointer group">
+                              <CardContent className="p-5 flex items-center gap-4">
+                                {videoThumb ? (
+                                  <div className="flex-shrink-0 w-16 h-10 rounded-lg overflow-hidden border border-border/40">
+                                    <img src={videoThumb} alt={cleanVideoTitle} className="w-full h-full object-cover" />
+                                  </div>
+                                ) : (
+                                  <div className="flex-shrink-0 w-10 h-10 bg-primary/10 text-primary font-bold rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                                    {index + 1}
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-bold text-foreground text-base group-hover:text-primary transition-colors truncate">
+                                    {cleanVideoTitle}
+                                  </h3>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    {video.duration_seconds
+                                      ? `Length: ${Math.floor(video.duration_seconds / 60)} minutes`
+                                      : 'Recorded Session'}
+                                  </p>
+                                </div>
+                                <div className="text-primary font-bold text-xs uppercase tracking-wider flex items-center gap-1">
+                                  Watch <ChevronLeft className="h-4 w-4 rotate-180" />
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </Link>
+                        )
+                      })}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">No videos available for this course yet.</p>
+                    <p className="text-muted-foreground text-sm italic">No videos uploaded for this class yet.</p>
                   )}
                 </section>
 
+                {/* PDFs / Materials */}
                 <section>
-                  <h2 className="text-2xl font-bold text-foreground mb-6">Course PDFs</h2>
+                  <h2 className="text-2xl font-extrabold text-foreground mb-6 flex items-center gap-2">
+                    <FileText className="h-5.5 w-5.5 text-primary" /> Lesson Guides & PDFs
+                  </h2>
                   {materials && materials.length > 0 ? (
                     <div className="grid sm:grid-cols-2 gap-4">
                       {materials.map((material) => (
-                        <a
+                        <SecurePdfViewer
                           key={material.id}
-                          href={material.file_url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <Card className="border-border hover:shadow-lg hover:shadow-primary/10 transition h-full">
-                            <CardContent className="p-6">
-                              <div className="text-sm text-primary font-semibold mb-2">PDF</div>
-                              <h3 className="font-semibold text-foreground">{material.title}</h3>
-                              <p className="text-sm text-muted-foreground mt-2">Open material</p>
-                            </CardContent>
-                          </Card>
-                        </a>
+                          title={material.title}
+                          fileUrl={material.file_url}
+                          watermark={userProfile?.phone_number || fullName}
+                        />
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">No PDFs available for this course yet.</p>
+                    <p className="text-muted-foreground text-sm italic">No PDFs available for this course yet.</p>
                   )}
                 </section>
 
+                {/* Assignments Submissions */}
                 <section>
-                  <h2 className="text-2xl font-bold text-foreground mb-6">Submissions</h2>
+                  <h2 className="text-2xl font-extrabold text-foreground mb-6 flex items-center gap-2">
+                    <BadgeCheck className="h-5.5 w-5.5 text-primary" /> Assignments & Submissions
+                  </h2>
                   {assignments && assignments.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       {assignments.map((assignment) => {
                         const ownSubmission = assignment.assignment_submissions?.find(
                           (submission: { user_id: string }) => submission.user_id === user.id
                         )
 
                         return (
-                          <Card key={assignment.id} className="border-border">
-                            <CardHeader>
-                              <CardTitle className="text-foreground">{assignment.title}</CardTitle>
-                              <CardDescription>
-                                {assignment.due_at
-                                  ? `Due: ${new Date(assignment.due_at).toLocaleString()}`
-                                  : 'No due date'}
-                              </CardDescription>
+                          <Card key={assignment.id} className="border-border glass-panel rounded-xl overflow-hidden">
+                            <CardHeader className="p-5 border-b border-border/40">
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                  <CardTitle className="text-lg font-bold text-foreground">{assignment.title}</CardTitle>
+                                  <CardDescription className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5 font-medium">
+                                    <Calendar className="h-3.5 w-3.5" />
+                                    {assignment.due_at
+                                      ? `Due Date: ${new Date(assignment.due_at).toLocaleString()}`
+                                      : 'No deadline set'}
+                                  </CardDescription>
+                                </div>
+                                {ownSubmission ? (
+                                  <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-3 py-1 rounded-full flex items-center gap-1">
+                                    <CheckCircle className="h-3 w-3" /> Submitted
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-500 px-3 py-1 rounded-full flex items-center gap-1 animate-pulse">
+                                    <Clock className="h-3 w-3" /> Pending Submission
+                                  </span>
+                                )}
+                              </div>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="p-5 space-y-4">
                               {assignment.instructions && (
-                                <p className="text-sm text-muted-foreground mb-4">
+                                <div className="text-sm text-muted-foreground bg-secondary/20 p-3.5 rounded-xl border border-border/30 leading-relaxed font-medium">
                                   {assignment.instructions}
-                                </p>
-                              )}
-                              {ownSubmission && (
-                                <div className="rounded-md border border-green-500/20 bg-green-500/10 p-3 text-sm text-green-600 dark:text-green-400">
-                                  Submitted on {new Date(ownSubmission.submitted_at).toLocaleString()}
                                 </div>
                               )}
-                              <StudentSubmissionForm
-                                assignmentId={assignment.id}
-                                submitted={Boolean(ownSubmission)}
-                              />
+                              
+                              {ownSubmission && (
+                                <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                                  ✓ Submission recorded on {new Date(ownSubmission.submitted_at).toLocaleString()}
+                                </div>
+                              )}
+                              
+                              <div className="border-t border-border/40 pt-4">
+                                <StudentSubmissionForm
+                                  assignmentId={assignment.id}
+                                  submitted={Boolean(ownSubmission)}
+                                />
+                              </div>
                             </CardContent>
                           </Card>
                         )
                       })}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">No submissions available for this course yet.</p>
+                    <p className="text-muted-foreground text-sm italic">No assignments posted for this syllabus yet.</p>
                   )}
                 </section>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-lg text-muted-foreground mb-4">
-                  {enrollment && enrollment.status === 'pending'
-                    ? 'Your enrollment is pending admin approval. You will be able to access course content once approved.'
-                    : 'You need to enroll in this course to view the content.'}
-                </p>
+
               </div>
             )}
+
           </div>
 
           {/* Sidebar */}
           <div>
-            <Card className="border-border sticky top-24">
-              <CardHeader>
-                <CardTitle className="text-2xl">
-                  ${Number(course.price).toFixed(2)}
+            <Card className="border-border glass-panel sticky top-24 rounded-2xl overflow-hidden shadow-sm">
+              {imageUrl && (
+                <div className="w-full h-[180px] relative overflow-hidden border-b border-border/40">
+                  <img
+                    src={imageUrl}
+                    alt={course.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-indigo-600" />
+              <CardHeader className="p-6 pb-4">
+                <CardTitle className="text-2xl sm:text-3.5xl font-extrabold text-primary">
+                  Rs. {Number(course.price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </CardTitle>
-                <CardDescription>One-time payment</CardDescription>
+                <CardDescription className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-1">One-time payment</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="p-6 pt-0 space-y-4">
                 {enrollment ? (
-                  <div className="space-y-3">
-                    <div className="p-3 rounded-md bg-primary/10">
-                      <p className="text-sm text-foreground font-semibold">
-                        Status: <span className="capitalize text-primary">{enrollment.status}</span>
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
+                      <p className="text-sm text-foreground font-bold flex items-center justify-between">
+                        <span>Enrollment Status:</span>
+                        <span className="capitalize text-primary">{enrollment.status}</span>
                       </p>
                     </div>
                     {enrollment.status === 'pending' && (
-                      <p className="text-xs text-muted-foreground">
-                        Admin review pending. You will be notified once approved.
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Our support team is reviewing your uploaded deposit slip. Your courses will unlock shortly.
                       </p>
                     )}
                   </div>
                 ) : (
-                  <EnrollmentForm courseId={id} coursePrice={course.price} />
+                  <EnrollmentForm courseId={id} coursePrice={Number(course.price)} />
                 )}
               </CardContent>
             </Card>
           </div>
+
         </div>
       </div>
     </div>
   )
 }
+

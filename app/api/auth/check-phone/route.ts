@@ -10,18 +10,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Phone number is required' }, { status: 400 })
     }
 
-    const normalizedPhone = normalizePhoneNumber(phone)
+    const cleanDigits = phone.replace(/\D/g, '')
+    if (cleanDigits.length < 9) {
+      return NextResponse.json({ error: 'Phone number must have at least 9 digits' }, { status: 400 })
+    }
+
+    const last9 = cleanDigits.slice(-9)
     const admin = createAdminClient()
 
+    // Match database phone number using the last 9 digits
     const { data: profile } = await admin
       .from('users')
-      .select('id, full_name, profile_completed_at, password_set_at')
-      .eq('phone_number', normalizedPhone)
-      .single()
+      .select('id, phone_number, full_name, profile_completed_at, password_set_at')
+      .like('phone_number', `%${last9}`)
+      .limit(1)
+      .maybeSingle()
 
+    if (profile) {
+      return NextResponse.json({
+        phone: profile.phone_number,
+        canLoginWithPassword: Boolean(profile.profile_completed_at && profile.password_set_at),
+      })
+    }
+
+    // Default normalization for new signups
+    const normalizedPhone = normalizePhoneNumber(phone)
     return NextResponse.json({
       phone: normalizedPhone,
-      canLoginWithPassword: Boolean(profile?.profile_completed_at && profile?.password_set_at),
+      canLoginWithPassword: false,
     })
   } catch (error) {
     console.error('Check phone error:', error)

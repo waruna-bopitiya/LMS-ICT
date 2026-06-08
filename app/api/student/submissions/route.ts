@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { put } from '@vercel/blob'
+import { uploadToSupabase } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -51,10 +51,8 @@ export async function POST(request: NextRequest) {
     if (file && file.size > 0) {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-')
       const filename = `submissions/${assignment.course_id}/${assignmentId}/${user.id}/${Date.now()}-${safeName}`
-      const blob = await put(filename, file, {
-        access: 'public',
-      })
-      fileUrl = blob.url
+      const publicUrl = await uploadToSupabase(file, filename)
+      fileUrl = publicUrl
     }
 
     const { error } = await supabase.from('assignment_submissions').upsert(

@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { put } from '@vercel/blob'
+import { uploadToSupabase } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -34,15 +34,14 @@ export async function POST(request: NextRequest) {
 
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-')
     const filename = `admin-uploads/${courseId}/${type}/${Date.now()}-${safeName}`
-    const blob = await put(filename, file, {
-      access: 'public',
-    })
+    const publicUrl = await uploadToSupabase(file, filename)
 
     return NextResponse.json({
       success: true,
-      url: blob.url,
+      url: publicUrl,
       contentType: file.type,
     })
+
   } catch (error) {
     console.error('Admin upload error:', error)
     return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 })
