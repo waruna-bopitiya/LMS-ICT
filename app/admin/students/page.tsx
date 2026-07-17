@@ -199,7 +199,7 @@ export default function AdminStudentsPage() {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-1 tracking-tight flex items-center gap-2">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-1 tracking-tight flex items-center gap-2">
               Student Directory
             </h1>
             <p className="text-muted-foreground">Monitor registrations and class enrollment activities</p>

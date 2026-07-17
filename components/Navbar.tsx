@@ -66,11 +66,11 @@ export default function Navbar({ user, isAdmin = false, fullName }: NavbarProps)
           
           {/* Logo Brand */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-indigo-600 text-primary-foreground shadow-md transition-transform group-hover:scale-105">
-              <Laptop className="h-5.5 w-5.5" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform group-hover:scale-105">
+              <Laptop className="h-5 w-5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80 group-hover:text-primary transition-colors">
+              <span className="text-lg font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
                 I See ICT
               </span>
               <span className="text-[10px] text-muted-foreground font-medium -mt-1">
@@ -85,7 +85,7 @@ export default function Navbar({ user, isAdmin = false, fullName }: NavbarProps)
               <Link
                 key={link.name}
                 href={link.href}
-                className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors duration-200"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
               >
                 {link.name}
               </Link>
@@ -115,7 +115,7 @@ export default function Navbar({ user, isAdmin = false, fullName }: NavbarProps)
               </div>
             ) : (
               <Link href="/auth/login">
-                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-5">
+                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-5 rounded-lg">
                   Sign In
                 </Button>
               </Link>

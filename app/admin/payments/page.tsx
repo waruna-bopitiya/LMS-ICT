@@ -136,7 +136,7 @@ export default function AdminPaymentsPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
         <div className="mb-12">
-          <h1 className="text-4xl font-extrabold text-foreground mb-2">Payment Review</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Payment Review</h1>
           <p className="text-muted-foreground">Review and approve student bank slip payments</p>
         </div>
 
@@ -159,7 +159,7 @@ export default function AdminPaymentsPage() {
                       </CardDescription>
                     </div>
                     <div className="text-left sm:text-right shrink-0">
-                      <div className="text-2xl font-extrabold text-primary">
+                      <div className="text-2xl font-bold text-primary">
                         Rs. {Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </div>
                       <p className="text-xs text-muted-foreground font-medium mt-0.5">

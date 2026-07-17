@@ -115,7 +115,7 @@ export default async function CoursePage({
                 <span className="text-primary text-xs font-bold uppercase tracking-widest bg-primary/10 border border-primary/20 px-3 py-0.5 rounded-full inline-block mb-4">
                   COURSE SYLLABUS
                 </span>
-                <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground leading-tight">
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground leading-tight">
                   {course.title}
                 </h1>
                 <p className="text-muted-foreground text-sm sm:text-base mt-3 leading-relaxed">
@@ -143,7 +143,7 @@ export default async function CoursePage({
                 
                 {/* Videos */}
                 <section>
-                  <h2 className="text-2xl font-extrabold text-foreground mb-6 flex items-center gap-2">
+                  <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
                     <Play className="h-5.5 w-5.5 text-primary fill-current" /> Lecture Videos
                   </h2>
                   {videos && videos.length > 0 ? (
@@ -192,7 +192,7 @@ export default async function CoursePage({
 
                 {/* PDFs / Materials */}
                 <section>
-                  <h2 className="text-2xl font-extrabold text-foreground mb-6 flex items-center gap-2">
+                  <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
                     <FileText className="h-5.5 w-5.5 text-primary" /> Lesson Guides & PDFs
                   </h2>
                   {materials && materials.length > 0 ? (
@@ -213,7 +213,7 @@ export default async function CoursePage({
 
                 {/* Assignments Submissions */}
                 <section>
-                  <h2 className="text-2xl font-extrabold text-foreground mb-6 flex items-center gap-2">
+                  <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
                     <BadgeCheck className="h-5.5 w-5.5 text-primary" /> Assignments & Submissions
                   </h2>
                   {assignments && assignments.length > 0 ? (
@@ -295,7 +295,7 @@ export default async function CoursePage({
               )}
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-indigo-600" />
               <CardHeader className="p-6 pb-4">
-                <CardTitle className="text-2xl sm:text-3.5xl font-extrabold text-primary">
+                <CardTitle className="text-2xl sm:text-3.5xl font-bold text-primary">
                   Rs. {Number(course.price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </CardTitle>
                 <CardDescription className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-1">One-time payment</CardDescription>

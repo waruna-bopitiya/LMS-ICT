@@ -193,7 +193,7 @@ export default function AdminActivatePage() {
             <UserCheck className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-3xl font-extrabold text-foreground">Manual Class Activation</h1>
+            <h1 className="text-3xl font-bold text-foreground">Manual Class Activation</h1>
             <p className="text-muted-foreground text-sm">Instantly activate courses for registered students</p>
           </div>
         </div>
@@ -281,7 +281,7 @@ export default function AdminActivatePage() {
               <CardHeader className="pb-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-xl font-extrabold text-foreground">Student Profile</CardTitle>
+                    <CardTitle className="text-xl font-bold text-foreground">Student Profile</CardTitle>
                     <CardDescription>Details retrieved from database</CardDescription>
                   </div>
                   {students.length > 1 && (

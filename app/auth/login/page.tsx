@@ -154,7 +154,7 @@ export default function LoginPage() {
             <Laptop className="h-6 w-6" />
           </div>
           <div className="flex flex-col">
-            <span className="text-2xl font-extrabold tracking-tight text-white group-hover:text-primary transition-colors">
+            <span className="text-2xl font-bold tracking-tight text-white group-hover:text-primary transition-colors">
               I See ICT
             </span>
             <span className="text-xs text-muted-foreground/85 font-medium -mt-1">
@@ -169,7 +169,7 @@ export default function LoginPage() {
             <span className="text-primary text-xs font-bold uppercase tracking-widest bg-primary/10 border border-primary/20 px-3.5 py-1 rounded-full">
               LMS PORTAL
             </span>
-            <h2 className="text-4xl font-extrabold text-white leading-tight">
+            <h2 className="text-4xl font-bold text-white leading-tight">
               Access the Complete Learning Suite
             </h2>
             <p className="text-slate-300 text-sm leading-relaxed">
@@ -243,7 +243,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-md border-border glass-panel rounded-2xl shadow-lg relative overflow-hidden">
           <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-indigo-600" />
           <CardHeader className="space-y-2 pt-8">
-            <CardTitle className="text-2xl sm:text-3xl font-extrabold text-foreground">Student Portal</CardTitle>
+            <CardTitle className="text-2xl sm:text-3xl font-bold text-foreground">Student Portal</CardTitle>
             <CardDescription className="text-sm">
               {step === 'phone'
                 ? 'Enter your phone number to continue'
@@ -338,7 +338,7 @@ export default function LoginPage() {
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     required
                     maxLength={6}
-                    className="bg-secondary/20 border-border text-foreground placeholder:text-muted-foreground text-center text-2xl font-extrabold tracking-widest h-14 rounded-xl focus-visible:ring-primary focus-visible:border-primary"
+                    className="bg-secondary/20 border-border text-foreground placeholder:text-muted-foreground text-center text-2xl font-bold tracking-widest h-14 rounded-xl focus-visible:ring-primary focus-visible:border-primary"
                   />
                 </div>
 
