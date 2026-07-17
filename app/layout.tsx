@@ -17,6 +17,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'I See ICT - by Waruna Bopitiya',
   description: 'Premium Advanced Level ICT Learning Platform by Waruna Bopitiya',
+  keywords: ['Waruna Bopitiya', 'I See ICT', 'AL ICT', 'Sri Lanka', 'ICT class', 'ICT by Waruna Bopitiya', 'HelaCode'],
+  authors: [{ name: 'Waruna Bopitiya' }],
+  creator: 'Waruna Bopitiya',
+  publisher: 'Waruna Bopitiya',
   icons: {
     icon: [
       {

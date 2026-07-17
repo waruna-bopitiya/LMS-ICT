@@ -7,6 +7,32 @@ import ScrollReveal from '@/components/ScrollReveal'
 import { BookOpen, Video, FileText, CheckCircle2, ChevronRight, Award, Users, BookOpenCheck, HelpCircle, Phone, Mail, MapPin, Laptop } from 'lucide-react'
 import { parseCourseDescription } from '@/lib/utils'
 import TypewriterCode from '@/components/TypewriterCode'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'I See ICT | Waruna Bopitiya - Premium A/L ICT Learning Platform',
+  description: 'Join I See ICT by Waruna Bopitiya, the premier Advanced Level ICT learning platform in Sri Lanka. Access video lessons, structured notes, past papers, and live grading.',
+  keywords: [
+    'Waruna Bopitiya',
+    'I See ICT',
+    'Waruna Bopitiya ICT',
+    'I See ICT Waruna Bopitiya',
+    'AL ICT',
+    'Advanced Level ICT',
+    'ICT classes Sri Lanka',
+    'ICT lessons Sinhala',
+    'ICT from ABC',
+    'ICT past papers',
+    'HelaCode'
+  ],
+  openGraph: {
+    title: 'I See ICT | Waruna Bopitiya - Premium A/L ICT Learning Platform',
+    description: 'Join I See ICT by Waruna Bopitiya, the premier Advanced Level ICT learning platform in Sri Lanka. Access video lessons, structured notes, past papers, and live grading.',
+    url: 'https://www.iseeict.com',
+    siteName: 'I See ICT',
+    type: 'website',
+  }
+}
 
 export default async function Home() {
   const supabase = await createClient()
@@ -78,8 +104,29 @@ export default async function Home() {
     }
   ]
 
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "I See ICT",
+    "url": "https://www.iseeict.com",
+    "logo": "https://www.iseeict.com/icon.svg",
+    "description": "Premium Advanced Level ICT Learning Platform in Sri Lanka by Waruna Bopitiya.",
+    "founder": {
+      "@type": "Person",
+      "name": "Waruna Bopitiya",
+      "jobTitle": "ICT Lecturer",
+      "sameAs": [
+        "https://www.linkedin.com/in/waruna-bopitiya"
+      ]
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
 
       {/* Background decoration grid */}
       <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
@@ -375,7 +422,7 @@ export default async function Home() {
                     Call Hotline
                   </Button>
                 </a>
-                <a href="mailto:support@iseeict.lk" className="flex-1">
+                <a href="mailto:support@iseeict.com" className="flex-1">
                   <Button variant="outline" className="w-full border-border text-foreground hover:bg-secondary font-semibold rounded-lg">
                     Email Support
                   </Button>
