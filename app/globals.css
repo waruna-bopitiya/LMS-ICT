@@ -111,9 +111,26 @@
   * {
     @apply border-border outline-ring/50 transition-colors duration-200;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground selection:bg-primary/25;
     font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv11';
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -218,4 +235,24 @@
 }
 .animate-fade-in {
   animation: fade-in 0.8s ease-out both;
+}
+
+/* Scroll-triggered reveal — paired with the ScrollReveal component.
+   Starts hidden/offset, transitions in once the element enters view. */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }

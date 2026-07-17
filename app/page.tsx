@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Navbar from '@/components/Navbar'
+import ScrollReveal from '@/components/ScrollReveal'
 import { BookOpen, Video, FileText, CheckCircle2, ChevronRight, Award, Users, BookOpenCheck, HelpCircle, Phone, Mail, MapPin, Laptop } from 'lucide-react'
 import { parseCourseDescription } from '@/lib/utils'
 
@@ -141,28 +142,30 @@ export default async function Home() {
       {/* Features Section */}
       <section id="features" className="py-20 border-y border-border/60 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
+          <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 tracking-tight">
               Everything You Need to Succeed
             </h2>
             <p className="text-muted-foreground text-lg">
               A comprehensive system built specifically for Advanced Level ICT students to study systematically.
             </p>
-          </div>
+          </ScrollReveal>
 
           <div className="grid md:grid-cols-3 gap-6">
             {features.map((feature, i) => (
-              <Card key={i} className="tech-card p-0 shadow-none overflow-hidden group">
-                <CardHeader className="p-6 pb-2">
-                  <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${feature.color} mb-5 group-hover:scale-105 transition-transform`}>
-                    <feature.icon className="h-5.5 w-5.5" />
-                  </div>
-                  <CardTitle className="text-lg font-semibold text-foreground mb-2">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-                </CardContent>
-              </Card>
+              <ScrollReveal key={i} delay={i * 100}>
+                <Card className="tech-card p-0 shadow-none overflow-hidden group h-full">
+                  <CardHeader className="p-6 pb-2">
+                    <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${feature.color} mb-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
+                      <feature.icon className="h-5.5 w-5.5" />
+                    </div>
+                    <CardTitle className="text-lg font-semibold text-foreground mb-2">{feature.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 pt-0">
+                    <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                  </CardContent>
+                </Card>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -170,18 +173,18 @@ export default async function Home() {
 
       {/* Available Courses Section */}
       <section id="courses" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 tracking-tight">
             Our Available Courses
           </h2>
           <p className="text-muted-foreground text-lg">
             Enroll today and start learning immediately. Select the course that fits your syllabus.
           </p>
-        </div>
+        </ScrollReveal>
 
         {courses && courses.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => {
+            {courses.map((course, i) => {
               // Extract course tag
               const isRevision = course.title.toLowerCase().includes('rev')
               const isPaper = course.title.toLowerCase().includes('paper')
@@ -189,59 +192,61 @@ export default async function Home() {
               const { description, imageUrl } = parseCourseDescription(course.description)
 
               return (
-                <Link key={course.id} href={`/student/courses/${course.id}`}>
-                  <Card className="tech-card p-0 h-full flex flex-col justify-between overflow-hidden cursor-pointer group shadow-none">
-                    <div>
-                      {/* Course Image */}
-                      <div className="h-44 w-full bg-secondary flex items-center justify-center border-b border-border relative overflow-hidden">
-                        <div className="absolute top-4 left-4 border border-border bg-background/80 backdrop-blur-md text-foreground text-[10px] uppercase font-semibold px-2.5 py-1 rounded-full z-10 tracking-wide">
-                          {tag}
-                        </div>
-                        {imageUrl ? (
-                          <img
-                            src={imageUrl}
-                            alt={course.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center justify-center text-center p-6 bg-secondary w-full h-full">
-                            <BookOpen className="h-14 w-14 text-muted-foreground/30 group-hover:scale-110 transition-transform duration-300" />
+                <ScrollReveal key={course.id} delay={(i % 3) * 100}>
+                  <Link href={`/student/courses/${course.id}`}>
+                    <Card className="tech-card p-0 h-full flex flex-col justify-between overflow-hidden cursor-pointer group shadow-none">
+                      <div>
+                        {/* Course Image */}
+                        <div className="h-44 w-full bg-secondary flex items-center justify-center border-b border-border relative overflow-hidden">
+                          <div className="absolute top-4 left-4 border border-border bg-background/80 backdrop-blur-md text-foreground text-[10px] uppercase font-semibold px-2.5 py-1 rounded-full z-10 tracking-wide">
+                            {tag}
                           </div>
-                        )}
+                          {imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={course.title}
+                              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center text-center p-6 bg-secondary w-full h-full">
+                              <BookOpen className="h-14 w-14 text-muted-foreground/30 group-hover:scale-110 transition-transform duration-300" />
+                            </div>
+                          )}
+                        </div>
+
+                        <CardHeader className="p-6">
+                          <CardTitle className="text-lg font-semibold text-foreground leading-snug group-hover:text-primary transition-colors duration-300">
+                            {course.title}
+                          </CardTitle>
+                          <CardDescription className="text-sm text-muted-foreground mt-2 line-clamp-3">
+                            {description || 'Access pre-recorded lectures, tutorials, and materials for this syllabus section.'}
+                          </CardDescription>
+                        </CardHeader>
                       </div>
 
-                      <CardHeader className="p-6">
-                        <CardTitle className="text-lg font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">
-                          {course.title}
-                        </CardTitle>
-                        <CardDescription className="text-sm text-muted-foreground mt-2 line-clamp-3">
-                          {description || 'Access pre-recorded lectures, tutorials, and materials for this syllabus section.'}
-                        </CardDescription>
-                      </CardHeader>
-                    </div>
-
-                    <CardContent className="p-6 pt-0 space-y-4">
-                      <div className="flex items-baseline justify-between border-t border-border pt-4">
-                        <span className="text-2xl font-bold text-foreground">
-                          Rs. {Number(course.price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest">One-Time Fee</span>
-                      </div>
-                      <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg">
-                        View Course Contents
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Link>
+                      <CardContent className="p-6 pt-0 space-y-4">
+                        <div className="flex items-baseline justify-between border-t border-border pt-4">
+                          <span className="text-2xl font-bold text-foreground">
+                            Rs. {Number(course.price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest">One-Time Fee</span>
+                        </div>
+                        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg">
+                          View Course Contents
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </ScrollReveal>
               )
             })}
           </div>
         ) : (
-          <div className="tech-card text-center py-16 px-6 max-w-md mx-auto shadow-none">
+          <ScrollReveal className="tech-card text-center py-16 px-6 max-w-md mx-auto shadow-none">
             <BookOpen className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-1">No Courses Available</h3>
             <p className="text-sm text-muted-foreground mb-6">Our upcoming classes will be published here soon.</p>
-          </div>
+          </ScrollReveal>
         )}
       </section>
 
@@ -251,10 +256,10 @@ export default async function Home() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
 
             {/* Left Side: Photo placeholder / abstract visual */}
-            <div className="relative flex justify-center">
+            <ScrollReveal className="relative flex justify-center">
               <div className="tech-card w-full max-w-sm aspect-4/5 p-3 shadow-none">
                 <div className="w-full h-full rounded-lg bg-card flex flex-col items-center justify-center p-6 border border-border text-center">
-                  <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
+                  <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20 transition-transform duration-300 hover:scale-105">
                     <Users className="h-11 w-11 text-primary" />
                   </div>
                   <h3 className="text-2xl font-semibold text-foreground">Waruna Bopitiya</h3>
@@ -266,10 +271,10 @@ export default async function Home() {
                   </div>
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
 
             {/* Right Side: Description */}
-            <div className="space-y-6">
+            <ScrollReveal className="space-y-6" delay={120}>
               <span className="text-primary text-sm font-semibold uppercase tracking-wider">Meet the Lecturer</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground leading-tight tracking-tight">
                 Learn from the Expert: Waruna Bopitiya
@@ -287,7 +292,7 @@ export default async function Home() {
                   </Button>
                 </a>
               </div>
-            </div>
+            </ScrollReveal>
 
           </div>
         </div>
@@ -295,7 +300,7 @@ export default async function Home() {
 
       {/* FAQ Section */}
       <section id="faq" className="py-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        <ScrollReveal className="text-center mb-16">
           <HelpCircle className="h-9 w-9 text-primary mx-auto mb-4" />
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 tracking-tight">
             Frequently Asked Questions
@@ -303,22 +308,23 @@ export default async function Home() {
           <p className="text-muted-foreground text-lg">
             Have questions about registration, class details, or payments? Find quick answers here.
           </p>
-        </div>
+        </ScrollReveal>
 
         <div className="space-y-3">
           {faqs.map((faq, i) => (
-            <details
-              key={i}
-              className="group border border-border rounded-lg p-4 [&_summary::-webkit-details-marker]:hidden bg-card transition-all duration-300 hover:border-primary/30"
-            >
-              <summary className="flex items-center justify-between cursor-pointer focus:outline-none">
-                <span className="font-semibold text-foreground text-base pr-4">{faq.q}</span>
-                <ChevronRight className="h-4 w-4 text-primary shrink-0 transition-transform duration-300 group-open:rotate-90" />
-              </summary>
-              <div className="mt-4 text-muted-foreground text-sm leading-relaxed border-t border-border pt-4">
-                {faq.a}
-              </div>
-            </details>
+            <ScrollReveal key={i} delay={i * 70}>
+              <details
+                className="group border border-border rounded-lg p-4 [&_summary::-webkit-details-marker]:hidden bg-card transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5"
+              >
+                <summary className="flex items-center justify-between cursor-pointer focus:outline-none">
+                  <span className="font-semibold text-foreground text-base pr-4">{faq.q}</span>
+                  <ChevronRight className="h-4 w-4 text-primary shrink-0 transition-transform duration-300 group-open:rotate-90" />
+                </summary>
+                <div className="mt-4 text-muted-foreground text-sm leading-relaxed border-t border-border pt-4 animate-fade-in">
+                  {faq.a}
+                </div>
+              </details>
+            </ScrollReveal>
           ))}
         </div>
       </section>
@@ -329,7 +335,7 @@ export default async function Home() {
           <div className="grid md:grid-cols-2 gap-12">
 
             {/* Info */}
-            <div className="space-y-8">
+            <ScrollReveal className="space-y-8">
               <div>
                 <h2 className="text-3xl font-bold text-foreground mb-3 tracking-tight">Get in Touch</h2>
                 <p className="text-muted-foreground text-base">
@@ -338,31 +344,31 @@ export default async function Home() {
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-secondary text-primary">
+                <div className="flex items-center gap-4 group">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-secondary text-primary transition-all duration-300 group-hover:scale-110 group-hover:border-primary/40 group-hover:bg-primary/10">
                     <Phone className="h-5 w-5" />
                   </div>
                   <span className="text-foreground font-medium text-sm">+94 77 123 4567</span>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-secondary text-primary">
+                <div className="flex items-center gap-4 group">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-secondary text-primary transition-all duration-300 group-hover:scale-110 group-hover:border-primary/40 group-hover:bg-primary/10">
                     <Mail className="h-5 w-5" />
                   </div>
                   <span className="text-foreground font-medium text-sm">support@iseeict.lk</span>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-secondary text-primary">
+                <div className="flex items-center gap-4 group">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-secondary text-primary transition-all duration-300 group-hover:scale-110 group-hover:border-primary/40 group-hover:bg-primary/10">
                     <MapPin className="h-5 w-5" />
                   </div>
                   <span className="text-foreground font-medium text-sm">Colombo, Sri Lanka</span>
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
 
             {/* Simple Contact Card */}
-            <div className="glass-panel p-8 rounded-xl flex flex-col justify-center">
+            <ScrollReveal className="glass-panel p-8 rounded-xl flex flex-col justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" delay={120}>
               <h3 className="text-xl font-semibold text-foreground mb-4">Support Available</h3>
               <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                 Our support channels are open Monday to Saturday from 8:00 AM to 6:00 PM. We will respond to payment verifications within 24 hours.
@@ -379,7 +385,7 @@ export default async function Home() {
                   </Button>
                 </a>
               </div>
-            </div>
+            </ScrollReveal>
 
           </div>
         </div>

@@ -85,7 +85,7 @@ export default function Navbar({ user, isAdmin = false, fullName }: NavbarProps)
               <Link
                 key={link.name}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
+                className="relative text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 py-1 after:absolute after:left-0 after:-bottom-0.5 after:h-px after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full"
               >
                 {link.name}
               </Link>
