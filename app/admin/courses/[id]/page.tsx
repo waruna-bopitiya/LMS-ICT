@@ -65,7 +65,7 @@ export default async function AdminCourseDetailPage({
     if (userIds.length > 0) {
       const { data: usersData } = await supabase
         .from('users')
-        .select('id, full_name, phone_number')
+        .select('id, full_name, phone_number, student_id')
         .in('id', userIds)
 
       const usersMap = new Map(usersData?.map(u => [u.id, u]) || [])

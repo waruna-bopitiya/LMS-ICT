@@ -13,9 +13,13 @@ export default function LoginPage() {
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [password, setPassword] = useState('')
-  const [step, setStep] = useState<'phone' | 'otp' | 'password'>('phone')
+  const [step, setStep] = useState<'phone' | 'otp' | 'password' | 'reset-password'>('phone')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
 
   const sendOtp = async (phoneToSend?: string) => {
     const activePhone = phoneToSend || phone
@@ -89,7 +93,21 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'Invalid phone number or password')
+        const nextAttempts = failedAttempts + 1
+        setFailedAttempts(nextAttempts)
+        
+        if (nextAttempts >= 3) {
+          setError('Too many failed password attempts. Sending OTP to reset your password...')
+          try {
+            await sendOtp()
+            setIsResettingPassword(true)
+            setFailedAttempts(0)
+          } catch (otpErr: any) {
+            setError(otpErr.message || 'Failed to send OTP')
+          }
+        } else {
+          setError(`${data.error || 'Invalid phone number or password'}. Attempts left: ${3 - nextAttempts}`)
+        }
         return
       }
 
@@ -121,6 +139,43 @@ export default function LoginPage() {
         return
       }
 
+      if (isResettingPassword) {
+        setStep('reset-password')
+      } else {
+        await redirectAfterLogin()
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newPassword !== confirmNewPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPassword }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to reset password')
+        return
+      }
+
       await redirectAfterLogin()
     } catch (err) {
       setError('An error occurred. Please try again.')
@@ -135,6 +190,8 @@ export default function LoginPage() {
     setOtp('')
     setPassword('')
     setError('')
+    setFailedAttempts(0)
+    setIsResettingPassword(false)
   }
 
   return (
@@ -244,12 +301,14 @@ export default function LoginPage() {
           <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-indigo-600" />
           <CardHeader className="space-y-2 pt-8">
             <CardTitle className="text-2xl sm:text-3xl font-bold text-foreground">Student Portal</CardTitle>
-            <CardDescription className="text-sm">
+            <CardDescription className="text-sm text-muted-foreground">
               {step === 'phone'
                 ? 'Enter your phone number to continue'
                 : step === 'password'
                   ? 'Enter your password to sign in'
-                  : 'Enter the verification code sent via SMS'}
+                  : step === 'reset-password'
+                    ? 'Enter a new password for your account'
+                    : 'Enter the verification code sent via SMS'}
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-8">
@@ -290,15 +349,32 @@ export default function LoginPage() {
             {step === 'password' && (
               <form onSubmit={handlePasswordLogin} className="space-y-5">
                 <div className="space-y-2">
+                  <label htmlFor="phone-display" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    Phone Number
+                  </label>
+                  <Input
+                    id="phone-display"
+                    type="tel"
+                    name="username"
+                    value={phone}
+                    readOnly
+                    autoComplete="username"
+                    className="bg-secondary/10 border-border text-muted-foreground h-11 rounded-xl cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <label htmlFor="password" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                     Password
                   </label>
                   <Input
                     id="password"
                     type="password"
+                    name="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    autoComplete="current-password"
                     className="bg-secondary/20 border-border text-foreground h-11 rounded-xl focus-visible:ring-primary focus-visible:border-primary"
                   />
                 </div>
@@ -360,6 +436,67 @@ export default function LoginPage() {
                     {loading ? 'Verifying OTP...' : 'Verify & Log In'}
                   </Button>
                 </div>
+              </form>
+            )}
+
+            {step === 'reset-password' && (
+              <form onSubmit={handleResetPasswordSubmit} className="space-y-5">
+                <input
+                  type="text"
+                  name="username"
+                  value={phone}
+                  readOnly
+                  autoComplete="username"
+                  className="hidden"
+                />
+
+                <div className="space-y-2">
+                  <label htmlFor="newPassword" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    New Password
+                  </label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    name="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                    className="border-border text-foreground h-10 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="confirmNewPassword" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Confirm New Password
+                  </label>
+                  <Input
+                    id="confirmNewPassword"
+                    type="password"
+                    name="confirm-password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                    className="border-border text-foreground h-10 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400"
+                  />
+                </div>
+
+                {error && (
+                  <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-md text-xs font-medium">
+                    ⚠ {error}
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={loading || !newPassword || !confirmNewPassword}
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-10 rounded-md"
+                >
+                  {loading ? 'Resetting password...' : 'Reset Password & Log In'}
+                </Button>
               </form>
             )}
           </CardContent>

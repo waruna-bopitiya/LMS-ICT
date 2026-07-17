@@ -254,7 +254,14 @@ export default function AdminActivatePage() {
                     className="p-4 rounded-xl border border-border/60 bg-secondary/10 hover:bg-secondary/30 hover:border-primary/40 cursor-pointer transition-all flex justify-between items-center"
                   >
                     <div>
-                      <h4 className="font-bold text-foreground">{student.full_name || 'Unnamed Student'}</h4>
+                      <h4 className="font-bold text-foreground">
+                        {student.full_name || 'Unnamed Student'}
+                        {student.student_id && (
+                          <span className="ml-2 text-[10px] font-mono bg-secondary px-1.5 py-0.5 rounded text-muted-foreground font-semibold border border-border/60">
+                            ID: {student.student_id}
+                          </span>
+                        )}
+                      </h4>
                       <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
                         <Phone className="h-3 w-3" /> {student.phone_number}
                         {student.school && (
@@ -300,6 +307,15 @@ export default function AdminActivatePage() {
                 
                 {/* Student Info Details */}
                 <div className="grid sm:grid-cols-2 gap-4 bg-secondary/10 p-4 rounded-xl border border-border/40">
+                  {selectedStudent.student_id && (
+                    <div className="space-y-1 sm:col-span-2">
+                      <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Student ID</span>
+                      <p className="font-mono font-bold text-primary text-base">
+                        {selectedStudent.student_id}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="space-y-1">
                     <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Full Name</span>
                     <p className="font-bold text-foreground flex items-center gap-2">

@@ -1,12 +1,43 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+
+    const { data: profile, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, profile })
+  } catch (error) {
+    console.error('Profile fetch error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch profile' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.getUser()
 
     if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
@@ -28,26 +59,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!password || password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
-        { status: 400 }
-      )
-    }
+    const { data: existingProfile } = await supabase
+      .from('users')
+      .select('password_set_at')
+      .eq('id', user.id)
+      .single()
 
-    if (password !== confirmPassword) {
-      return NextResponse.json(
-        { error: 'Passwords do not match' },
-        { status: 400 }
-      )
-    }
+    const isPasswordRequired = !existingProfile?.password_set_at
 
-    const { error: passwordError } = await supabase.auth.updateUser({
-      password,
-    })
+    if (isPasswordRequired || password) {
+      if (!password || password.length < 6) {
+        return NextResponse.json(
+          { error: 'Password must be at least 6 characters' },
+          { status: 400 }
+        )
+      }
 
-    if (passwordError) {
-      return NextResponse.json({ error: passwordError.message }, { status: 500 })
+      if (password !== confirmPassword) {
+        return NextResponse.json(
+          { error: 'Passwords do not match' },
+          { status: 400 }
+        )
+      }
+
+      const { error: passwordError } = await supabase.auth.updateUser({
+        password,
+      })
+
+      if (passwordError) {
+        return NextResponse.json({ error: passwordError.message }, { status: 500 })
+      }
     }
 
     const { error } = await supabase
@@ -59,7 +100,7 @@ export async function POST(request: NextRequest) {
         district,
         guardian_phone: guardianPhone || null,
         profile_completed_at: new Date().toISOString(),
-        password_set_at: new Date().toISOString(),
+        ...((isPasswordRequired || password) ? { password_set_at: new Date().toISOString() } : {})
       })
       .eq('id', user.id)
 

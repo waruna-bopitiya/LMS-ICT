@@ -202,7 +202,7 @@ export default async function CoursePage({
                           key={material.id}
                           title={material.title}
                           fileUrl={material.file_url}
-                          watermark={userProfile?.phone_number || fullName}
+                          watermark={`${userProfile?.phone_number || ''} ${userProfile?.student_id ? `(ID: ${userProfile.student_id})` : ''}`}
                         />
                       ))}
                     </div>

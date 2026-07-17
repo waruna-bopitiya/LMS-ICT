@@ -41,7 +41,7 @@ type Assignment = {
     answer_text: string | null
     file_url: string | null
     submitted_at: string
-    users: { full_name: string | null; phone_number: string | null } | null
+    users: { full_name: string | null; phone_number: string | null; student_id?: number | null } | null
   }>
 }
 
@@ -548,8 +548,13 @@ export default function AdminCourseManager({
                 <div className="mt-4 space-y-3">
                   {assignment.assignment_submissions?.map(submission => (
                     <div key={submission.id} className="rounded-md bg-secondary/10 p-3 text-sm">
-                      <div className="font-medium text-foreground">
-                        {submission.users?.full_name || 'Student'} ({submission.users?.phone_number || 'No phone'})
+                      <div className="font-medium text-foreground flex items-center justify-between">
+                        <span>{submission.users?.full_name || 'Student'} ({submission.users?.phone_number || 'No phone'})</span>
+                        {submission.users?.student_id && (
+                          <span className="text-xs font-mono bg-secondary px-1.5 py-0.5 rounded text-muted-foreground border border-border/40 font-semibold">
+                            ID: {submission.users.student_id}
+                          </span>
+                        )}
                       </div>
                       {submission.answer_text && <p className="mt-1 text-muted-foreground">{submission.answer_text}</p>}
                       {submission.file_url && (

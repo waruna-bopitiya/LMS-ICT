@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     // Query for student with matching last 9 digits of phone
     const { data: students, error } = await admin
       .from('users')
-      .select('id, phone_number, full_name, school, district, guardian_phone, is_admin')
+      .select('id, phone_number, full_name, school, district, guardian_phone, is_admin, student_id')
       .like('phone_number', `%${last9}`)
 
     if (error) {

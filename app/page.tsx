@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import ScrollReveal from '@/components/ScrollReveal'
 import { BookOpen, Video, FileText, CheckCircle2, ChevronRight, Award, Users, BookOpenCheck, HelpCircle, Phone, Mail, MapPin, Laptop } from 'lucide-react'
 import { parseCourseDescription } from '@/lib/utils'
+import TypewriterCode from '@/components/TypewriterCode'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -92,7 +93,7 @@ export default async function Home() {
       <section className="relative pt-20 pb-16 md:pt-28 md:pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="tech-badge mb-6 animate-fade-up">
           <span className="status-dot" />
-          Enrolling now for the 2026 A/L cohort
+          Enrolling now for the 2028 A/L
         </div>
         <h1 className="text-4xl sm:text-5xl md:text-6.5xl font-bold tracking-tight text-foreground mb-6 leading-[1.1] max-w-4xl mx-auto animate-fade-up [animation-delay:80ms]">
           Master the World of <span className="text-gradient">Information Technology</span>
@@ -131,11 +132,7 @@ export default async function Home() {
             <span className="h-3 w-3 rounded-full bg-emerald-500/60" />
             <span className="ml-3 text-xs text-muted-foreground font-mono">student/dashboard.tsx</span>
           </div>
-          <div className="rounded-b-xl border border-border bg-card/60 backdrop-blur-md p-6 text-left font-mono text-xs sm:text-sm leading-relaxed shadow-sm">
-            <p><span className="text-primary">const</span> <span className="text-foreground">progress</span> = <span className="text-emerald-500">await</span> student.track(<span className="text-amber-500">'AL_ICT_2026'</span>)</p>
-            <p className="text-muted-foreground">// video lessons · notes · past papers · live grading</p>
-            <p><span className="text-primary">return</span> <span className="text-foreground">progress</span>.<span className="text-primary">grade</span> === <span className="text-amber-500">'A'</span> <span className="text-muted-foreground">✓</span></p>
-          </div>
+          <TypewriterCode />
         </div>
       </section>
 
@@ -201,17 +198,11 @@ export default async function Home() {
                           <div className="absolute top-4 left-4 border border-border bg-background/80 backdrop-blur-md text-foreground text-[10px] uppercase font-semibold px-2.5 py-1 rounded-full z-10 tracking-wide">
                             {tag}
                           </div>
-                          {imageUrl ? (
-                            <img
-                              src={imageUrl}
-                              alt={course.title}
-                              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-                            />
-                          ) : (
-                            <div className="flex flex-col items-center justify-center text-center p-6 bg-secondary w-full h-full">
-                              <BookOpen className="h-14 w-14 text-muted-foreground/30 group-hover:scale-110 transition-transform duration-300" />
-                            </div>
-                          )}
+                          <img
+                            src={imageUrl || "/default-course.jpg"}
+                            alt={course.title}
+                            className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-115"
+                          />
                         </div>
 
                         <CardHeader className="p-6">
@@ -258,16 +249,21 @@ export default async function Home() {
             {/* Left Side: Photo placeholder / abstract visual */}
             <ScrollReveal className="relative flex justify-center">
               <div className="tech-card w-full max-w-sm aspect-4/5 p-3 shadow-none">
-                <div className="w-full h-full rounded-lg bg-card flex flex-col items-center justify-center p-6 border border-border text-center">
-                  <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20 transition-transform duration-300 hover:scale-105">
-                    <Users className="h-11 w-11 text-primary" />
+                <div className="w-full h-full rounded-lg bg-card flex flex-col items-center justify-center p-6 border border-border text-center overflow-hidden">
+                  <div className="h-24 w-24 rounded-full mb-6 border border-border overflow-hidden relative shrink-0 transition-transform duration-300 hover:scale-105">
+                    <img
+                      src="/teacher.png"
+                      alt="Waruna Bopitiya"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <h3 className="text-2xl font-semibold text-foreground">Waruna Bopitiya</h3>
+                  <h3 className="text-xl font-bold text-foreground">Waruna Bopitiya</h3>
                   <p className="text-primary text-sm font-medium mt-1">Founder & Lecturer</p>
                   <div className="mt-6 space-y-2 text-xs text-muted-foreground font-medium text-left max-w-[240px]">
-                    <div className="flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" /> 12+ Years Teaching ICT</div>
-                    <div className="flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" /> BSc. in Information Technology</div>
-                    <div className="flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" /> Produced Top District Ranks</div>
+                    <div className="flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" /> 2+ Years Teaching ICT</div>
+                    <div className="flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" /> BSc. (Hons) in Information Technology Specialized in Information Technology</div>
+                    <div className="flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />Intern Software Engineer</div>
+                    <div className="flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />Co-Founder @HelaCode</div>
                   </div>
                 </div>
               </div>
@@ -348,7 +344,7 @@ export default async function Home() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-secondary text-primary transition-all duration-300 group-hover:scale-110 group-hover:border-primary/40 group-hover:bg-primary/10">
                     <Phone className="h-5 w-5" />
                   </div>
-                  <span className="text-foreground font-medium text-sm">+94 77 123 4567</span>
+                  <span className="text-foreground font-medium text-sm">+94 72 49 36 441</span>
                 </div>
 
                 <div className="flex items-center gap-4 group">
@@ -374,7 +370,7 @@ export default async function Home() {
                 Our support channels are open Monday to Saturday from 8:00 AM to 6:00 PM. We will respond to payment verifications within 24 hours.
               </p>
               <div className="flex gap-4">
-                <a href="tel:+94771234567" className="flex-1">
+                <a href="tel:+94724936441" className="flex-1">
                   <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg">
                     Call Hotline
                   </Button>

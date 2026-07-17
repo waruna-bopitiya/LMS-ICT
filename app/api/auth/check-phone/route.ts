@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     // Match database phone number using the last 9 digits
     const { data: profile } = await admin
       .from('users')
-      .select('id, phone_number, full_name, profile_completed_at, password_set_at')
+      .select('id, phone_number, full_name, profile_completed_at, password_set_at, is_admin')
       .like('phone_number', `%${last9}`)
       .limit(1)
       .maybeSingle()
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (profile) {
       return NextResponse.json({
         phone: profile.phone_number,
-        canLoginWithPassword: Boolean(profile.profile_completed_at && profile.password_set_at),
+        canLoginWithPassword: Boolean(profile.is_admin || (profile.profile_completed_at && profile.password_set_at)),
       })
     }
 

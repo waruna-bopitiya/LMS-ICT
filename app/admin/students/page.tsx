@@ -110,7 +110,7 @@ export default function AdminStudentsPage() {
         const userIds = [...new Set(enrollmentsData.map(e => e.user_id))]
         const { data: usersData, error: usersError } = await supabase
           .from('users')
-          .select('id, full_name, phone_number, school, district')
+          .select('id, full_name, phone_number, school, district, student_id')
           .in('id', userIds)
 
         if (usersError) {
@@ -156,7 +156,8 @@ export default function AdminStudentsPage() {
       (student.full_name || '').toLowerCase().includes(term) ||
       (student.phone_number || '').toLowerCase().includes(term) ||
       (student.school || '').toLowerCase().includes(term) ||
-      (student.district || '').toLowerCase().includes(term)
+      (student.district || '').toLowerCase().includes(term) ||
+      String(student.student_id || '').includes(term)
     )
   })
 
@@ -166,7 +167,8 @@ export default function AdminStudentsPage() {
     const studentMatches =
       (enrollment.users?.full_name || '').toLowerCase().includes(term) ||
       (enrollment.users?.phone_number || '').toLowerCase().includes(term) ||
-      (enrollment.courses?.title || '').toLowerCase().includes(term)
+      (enrollment.courses?.title || '').toLowerCase().includes(term) ||
+      String(enrollment.users?.student_id || '').includes(term)
 
     const courseMatches = selectedCourseFilter 
       ? enrollment.course_id === selectedCourseFilter
@@ -283,9 +285,16 @@ export default function AdminStudentsPage() {
                   <Card key={student.id} className="glass-panel border-border hover:shadow-md hover:border-primary/20 transition-all rounded-2xl overflow-hidden group">
                     <CardHeader className="p-5 pb-3">
                       <div className="flex justify-between items-start gap-2">
-                        <CardTitle className="text-lg font-bold text-foreground line-clamp-1">
-                          {student.full_name || <span className="text-muted-foreground italic font-normal text-sm">Profile Incomplete</span>}
-                        </CardTitle>
+                        <div className="flex flex-col gap-0.5">
+                          <CardTitle className="text-lg font-bold text-foreground line-clamp-1">
+                            {student.full_name || <span className="text-muted-foreground italic font-normal text-sm">Profile Incomplete</span>}
+                          </CardTitle>
+                          {student.student_id && (
+                            <span className="text-[11px] font-mono text-muted-foreground font-semibold">
+                              Student ID: {student.student_id}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[10px] bg-secondary/60 text-muted-foreground font-semibold px-2 py-0.5 rounded-md flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {new Date(student.created_at).toLocaleDateString()}
@@ -383,8 +392,13 @@ export default function AdminStudentsPage() {
                         <tr key={enrollment.id} className="hover:bg-secondary/10 transition-colors text-foreground">
                           <td className="p-4 sm:p-5">
                             <div>
-                              <div className="font-bold">
-                                {enrollment.users?.full_name || <span className="text-muted-foreground italic font-normal">Profile Incomplete</span>}
+                              <div className="font-bold flex items-center gap-2">
+                                <span>{enrollment.users?.full_name || <span className="text-muted-foreground italic font-normal">Profile Incomplete</span>}</span>
+                                {enrollment.users?.student_id && (
+                                  <span className="text-[10px] font-mono bg-secondary px-1.5 py-0.5 rounded text-muted-foreground font-semibold">
+                                    ID: {enrollment.users.student_id}
+                                  </span>
+                                )}
                               </div>
                               <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1 mt-0.5">
                                 <Phone className="h-3 w-3 text-primary" /> {enrollment.users?.phone_number || 'N/A'}

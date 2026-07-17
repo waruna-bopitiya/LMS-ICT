@@ -55,7 +55,7 @@ export default function Navbar({ user, isAdmin = false, fullName }: NavbarProps)
     return [
       { name: 'Browse Courses', href: '/', icon: BookOpen },
       { name: 'Student Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
-      { name: 'My Profile', href: '/student/profile', icon: User },
+      // { name: 'My Profile', href: '/student/profile', icon: User },
     ]
   })()
 

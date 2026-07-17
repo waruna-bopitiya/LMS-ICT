@@ -51,7 +51,7 @@ export default function AdminPaymentsPage() {
           const userIds = [...new Set(paymentsData.map(p => p.user_id))]
           const { data: usersData, error: usersError } = await supabase
             .from('users')
-            .select('id, full_name, phone_number')
+            .select('id, full_name, phone_number, student_id')
             .in('id', userIds)
 
           if (usersError) throw usersError
@@ -154,8 +154,13 @@ export default function AdminPaymentsPage() {
                       <CardTitle className="text-foreground text-xl font-bold">
                         {payment.courses?.title}
                       </CardTitle>
-                      <CardDescription className="mt-2 text-sm text-muted-foreground font-medium">
-                        Student: {payment.users?.full_name} ({payment.users?.phone_number})
+                      <CardDescription className="mt-2 text-sm text-muted-foreground font-medium flex flex-wrap gap-x-2 gap-y-1">
+                        <span>Student: {payment.users?.full_name} ({payment.users?.phone_number})</span>
+                        {payment.users?.student_id && (
+                          <span className="text-xs font-mono bg-secondary border border-border px-1.5 py-0.5 rounded text-muted-foreground font-semibold">
+                            ID: {payment.users.student_id}
+                          </span>
+                        )}
                       </CardDescription>
                     </div>
                     <div className="text-left sm:text-right shrink-0">

@@ -27,7 +27,7 @@ export default async function WatchPage({
 
   const { data: profile } = await supabase
     .from('users')
-    .select('full_name, is_admin, phone_number, password_set_at')
+    .select('full_name, is_admin, phone_number, password_set_at, student_id')
     .eq('id', user.id)
     .single()
 
@@ -121,7 +121,7 @@ export default async function WatchPage({
                   title={cleanTitle}
                   youtubeId={youtubeId}
                   initialProgress={progressData?.watched_percentage || 0}
-                  watermark={profile?.phone_number || profile?.full_name || ''}
+                  watermark={`${profile?.phone_number || ''} ${profile?.student_id ? `(ID: ${profile.student_id})` : ''}`}
                 />
               </CardContent>
             </Card>

@@ -58,12 +58,21 @@ export default async function StudentDashboard() {
 
         {/* Welcome Section */}
         <div className="mb-10 p-6 sm:p-8 rounded-xl border border-border bg-card relative overflow-hidden animate-fade-up">
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2 tracking-tight">
-            Welcome back, <span className="text-gradient">{userProfile?.full_name || 'Student'}</span>
-          </h1>
-          <p className="text-muted-foreground text-sm sm:text-base max-w-xl">
-            Keep up the excellent work. Track your watch percentage, download materials, and submit assignments.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2 tracking-tight">
+                Welcome back, <span className="text-gradient">{userProfile?.full_name || 'Student'}</span>
+              </h1>
+              <p className="text-muted-foreground text-sm sm:text-base max-w-xl">
+                Keep up the excellent work. Track your watch percentage, download materials, and submit assignments.
+              </p>
+            </div>
+            {userProfile?.student_id && (
+              <div className="shrink-0 self-start sm:self-center bg-secondary/80 border border-border px-4 py-2 rounded-lg font-mono text-sm font-semibold text-foreground shadow-xs">
+                Student ID: {userProfile.student_id}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -135,15 +144,13 @@ export default async function StudentDashboard() {
                   <Link key={enrollment.id} href={`/student/courses/${enrollment.course_id}`}>
                     <Card className="tech-card shadow-none h-full flex flex-col justify-between overflow-hidden cursor-pointer group p-0">
                       <div>
-                        {imageUrl && (
-                          <div className="w-full h-40 relative overflow-hidden border-b border-border">
-                            <img
-                              src={imageUrl}
-                              alt={enrollment.courses?.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          </div>
-                        )}
+                        <div className="w-full h-40 relative overflow-hidden border-b border-border bg-zinc-950 flex items-center justify-center">
+                          <img
+                            src={imageUrl || "/default-course.jpg"}
+                            alt={enrollment.courses?.title}
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
                         <CardHeader className="p-6">
                           <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                             {enrollment.courses?.title}
@@ -188,15 +195,13 @@ export default async function StudentDashboard() {
                 return (
                   <Card key={enrollment.id} className="border-amber-500/25 bg-amber-500/5 rounded-xl overflow-hidden flex flex-col justify-between p-0 shadow-none">
                     <div>
-                      {imageUrl && (
-                        <div className="w-full h-40 relative overflow-hidden border-b border-amber-500/15">
-                          <img
-                            src={imageUrl}
-                            alt={enrollment.courses?.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
+                      <div className="w-full h-40 relative overflow-hidden border-b border-amber-500/15 bg-zinc-950 flex items-center justify-center">
+                        <img
+                          src={imageUrl || "/default-course.jpg"}
+                          alt={enrollment.courses?.title}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
                       <CardHeader className="p-6">
                         <CardTitle className="text-lg font-semibold text-foreground">
                           {enrollment.courses?.title}

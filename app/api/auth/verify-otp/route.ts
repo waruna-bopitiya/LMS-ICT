@@ -56,16 +56,9 @@ export async function POST(request: NextRequest) {
       .from('users')
       .select('id, password_set_at, profile_completed_at')
       .eq('phone_number', normalizedPhone)
-      .single()
+      .maybeSingle()
 
     let userId = existingProfile?.id
-
-    if (existingProfile?.password_set_at && existingProfile?.profile_completed_at) {
-      return NextResponse.json(
-        { error: 'This account already uses password login' },
-        { status: 400 }
-      )
-    }
 
     if (!userId) {
       const { data: created, error: createError } =
