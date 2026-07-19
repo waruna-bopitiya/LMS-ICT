@@ -10,8 +10,8 @@ const CODE_SEGMENTS = [
   { text: 'await', className: 'text-emerald-500 font-semibold' },
   { text: ' student.track(', className: 'text-foreground' },
   { text: "'AL_ICT_2028'", className: 'text-amber-500 font-mono' },
-  { text: ')\n\n', className: '' },
-  { text: '// video lessons · notes · past papers · live grading\n\n', className: 'text-muted-foreground italic' },
+  { text: ')\n', className: '' },
+  { text: '// video lessons · notes · past papers · live grading\n', className: 'text-muted-foreground italic' },
   { text: 'return', className: 'text-primary font-semibold' },
   { text: ' progress.', className: 'text-foreground' },
   { text: 'grade', className: 'text-primary font-semibold' },
@@ -47,8 +47,8 @@ export default function TypewriterCode() {
   let currentPos = 0
 
   return (
-    <div className="rounded-b-xl border border-border bg-card/60 backdrop-blur-md p-6 text-left font-mono text-xs sm:text-sm leading-relaxed shadow-sm min-h-[120px] relative select-none">
-      <p>
+    <div className="rounded-b-xl border border-border bg-card/60 backdrop-blur-md p-5 sm:p-6 text-left font-mono text-[11px] sm:text-sm leading-relaxed shadow-sm min-h-[145px] sm:min-h-[130px] relative select-none overflow-hidden flex flex-col justify-start">
+      <p className="break-words">
         {CODE_SEGMENTS.map((seg, idx) => {
           const start = currentPos
           const end = currentPos + seg.text.length

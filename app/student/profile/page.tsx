@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { SRI_LANKA_DISTRICTS, SCHOOLS_LIST } from '@/lib/constants/schools-districts'
 
 export default function StudentProfilePage() {
   const router = useRouter()
@@ -16,6 +17,8 @@ export default function StudentProfilePage() {
   const [isExistingUser, setIsExistingUser] = useState(false)
   const [studentId, setStudentId] = useState<number | null>(null)
   const [phone, setPhone] = useState('')
+  const [showDistrictSuggestions, setShowDistrictSuggestions] = useState(false)
+  const [showSchoolSuggestions, setShowSchoolSuggestions] = useState(false)
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -109,6 +112,18 @@ export default function StudentProfilePage() {
     }
   }
 
+  const districtSearchTerms = (form.district || '').toLowerCase().trim().split(/\s+/).filter(Boolean)
+  const filteredDistricts = SRI_LANKA_DISTRICTS.filter(d => {
+    const lowerD = d.toLowerCase()
+    return districtSearchTerms.every(term => lowerD.includes(term))
+  })
+
+  const schoolSearchTerms = (form.school || '').toLowerCase().trim().split(/\s+/).filter(Boolean)
+  const filteredSchools = SCHOOLS_LIST.filter(s => {
+    const lowerS = s.toLowerCase()
+    return schoolSearchTerms.every(term => lowerS.includes(term))
+  })
+
   if (fetching) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -171,29 +186,75 @@ export default function StudentProfilePage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 relative">
               <label htmlFor="district" className="text-sm font-medium text-foreground">
                 District *
               </label>
               <Input
                 id="district"
                 value={form.district}
-                onChange={e => updateField('district', e.target.value)}
+                onChange={e => {
+                  updateField('district', e.target.value)
+                  setShowDistrictSuggestions(true)
+                }}
+                onFocus={() => setShowDistrictSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowDistrictSuggestions(false), 200)}
+                placeholder="Type your district (e.g. Kalutara, Colombo)"
                 required
+                autoComplete="off"
                 className="bg-secondary/10 border-border text-foreground"
               />
+              {showDistrictSuggestions && form.district.trim().length > 0 && filteredDistricts.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1 z-50 max-h-48 overflow-y-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-md p-1">
+                  {filteredDistricts.map((d) => (
+                    <div
+                      key={d}
+                      onMouseDown={() => {
+                        updateField('district', d)
+                        setShowDistrictSuggestions(false)
+                      }}
+                      className="cursor-pointer px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground font-medium transition-colors"
+                    >
+                      {d}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 relative">
               <label htmlFor="school" className="text-sm font-medium text-foreground">
                 School
               </label>
               <Input
                 id="school"
                 value={form.school}
-                onChange={e => updateField('school', e.target.value)}
+                onChange={e => {
+                  updateField('school', e.target.value)
+                  setShowSchoolSuggestions(true)
+                }}
+                onFocus={() => setShowSchoolSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSchoolSuggestions(false), 200)}
+                placeholder="Type your school name..."
+                autoComplete="off"
                 className="bg-secondary/10 border-border text-foreground"
               />
+              {showSchoolSuggestions && form.school.trim().length > 0 && filteredSchools.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1 z-50 max-h-56 overflow-y-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-md p-1">
+                  {filteredSchools.map((s) => (
+                    <div
+                      key={s}
+                      onMouseDown={() => {
+                        updateField('school', s)
+                        setShowSchoolSuggestions(false)
+                      }}
+                      className="cursor-pointer px-3 py-2 text-xs font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border/40 last:border-0"
+                    >
+                      {s}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

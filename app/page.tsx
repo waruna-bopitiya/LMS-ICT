@@ -10,26 +10,24 @@ import TypewriterCode from '@/components/TypewriterCode'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'I See ICT | Waruna Bopitiya - Premium A/L ICT Learning Platform',
-  description: 'Join I See ICT by Waruna Bopitiya, the premier Advanced Level ICT learning platform in Sri Lanka. Access video lessons, structured notes, past papers, and live grading.',
+  title: 'Waruna Bopitiya | I See ICT - Premium A/L ICT Classes',
+  description: 'Official A/L ICT learning platform by Waruna Bopitiya (I See ICT). Master Advanced Level Information Technology with structured lessons, past papers, and live grading.',
   keywords: [
     'Waruna Bopitiya',
     'I See ICT',
     'Waruna Bopitiya ICT',
     'I See ICT Waruna Bopitiya',
+    'Waruna Bopitiya A/L ICT',
     'AL ICT',
     'Advanced Level ICT',
     'ICT classes Sri Lanka',
     'ICT lessons Sinhala',
-    'ICT from ABC',
-    'ICT past papers',
     'HelaCode'
   ],
   openGraph: {
-    title: 'I See ICT | Waruna Bopitiya - Premium A/L ICT Learning Platform',
-    description: 'Join I See ICT by Waruna Bopitiya, the premier Advanced Level ICT learning platform in Sri Lanka. Access video lessons, structured notes, past papers, and live grading.',
-    url: 'https://www.iseeict.com',
-    siteName: 'I See ICT',
+    title: 'Waruna Bopitiya | I See ICT - Premium A/L ICT Classes',
+    description: 'Official A/L ICT learning platform by Waruna Bopitiya (I See ICT). Master Advanced Level Information Technology with structured lessons, past papers, and live grading.',
+    siteName: 'I See ICT by Waruna Bopitiya',
     type: 'website',
   }
 }
@@ -104,21 +102,37 @@ export default async function Home() {
     }
   ]
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+    ? (process.env.NEXT_PUBLIC_SITE_URL.startsWith('http')
+        ? process.env.NEXT_PUBLIC_SITE_URL
+        : `https://${process.env.NEXT_PUBLIC_SITE_URL}`)
+    : (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
+
+  const baseUrl = siteUrl ? siteUrl.replace(/\/$/, '') : ''
+
   const schemaData = {
     "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    "name": "I See ICT",
-    "url": "https://www.iseeict.com",
-    "logo": "https://www.iseeict.com/icon.svg",
-    "description": "Premium Advanced Level ICT Learning Platform in Sri Lanka by Waruna Bopitiya.",
-    "founder": {
-      "@type": "Person",
-      "name": "Waruna Bopitiya",
-      "jobTitle": "ICT Lecturer",
-      "sameAs": [
-        "https://www.linkedin.com/in/waruna-bopitiya"
-      ]
-    }
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": baseUrl ? `${baseUrl}/#person` : "https://schema.org/Person",
+        "name": "Waruna Bopitiya",
+        "jobTitle": "ICT Lecturer & Software Engineer",
+        "description": "Waruna Bopitiya is a prominent A/L ICT educator in Sri Lanka and founder of I See ICT."
+      },
+      {
+        "@type": "EducationalOrganization",
+        "@id": baseUrl ? `${baseUrl}/#organization` : "https://schema.org/EducationalOrganization",
+        "name": "I See ICT",
+        "alternateName": ["I SEE ICT", "I See ICT Waruna Bopitiya"],
+        ...(baseUrl ? { "url": baseUrl, "logo": `${baseUrl}/icon.svg` } : {}),
+        "description": "Official Advanced Level ICT Learning Platform in Sri Lanka by Waruna Bopitiya.",
+        "founder": {
+          "@type": "Person",
+          "name": "Waruna Bopitiya"
+        }
+      }
+    ]
   }
 
   return (
@@ -143,7 +157,7 @@ export default async function Home() {
           Enrolling now for the 2028 A/L
         </div>
         <h1 className="text-4xl sm:text-5xl md:text-6.5xl font-bold tracking-tight text-foreground mb-6 leading-[1.1] max-w-4xl mx-auto animate-fade-up [animation-delay:80ms]">
-          Master the World of <span className="text-gradient">Information Technology</span>
+          I See ICT by <span className="text-gradient">Waruna Bopitiya</span>
         </h1>
         <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-up [animation-delay:160ms]">
           Join <strong className="text-foreground font-semibold">I See ICT</strong> by <strong className="text-foreground font-semibold">Waruna Bopitiya</strong>. Access premium video tutorials, comprehensive notes, and interactive assessments designed to secure your 'A' grade.

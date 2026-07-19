@@ -14,9 +14,22 @@ const geistMono = Geist_Mono({
   variable: '--font-mono',
 })
 
+const getSiteUrl = () => {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL.startsWith('http')
+      ? process.env.NEXT_PUBLIC_SITE_URL
+      : `https://${process.env.NEXT_PUBLIC_SITE_URL}`
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  return 'http://localhost:3000'
+}
+
 export const metadata: Metadata = {
-  title: 'I See ICT - by Waruna Bopitiya',
-  description: 'Premium Advanced Level ICT Learning Platform by Waruna Bopitiya',
+  metadataBase: new URL(getSiteUrl()),
+  title: 'Waruna Bopitiya | I See ICT - A/L ICT Learning Platform',
+  description: 'Official Advanced Level ICT learning platform in Sri Lanka by Waruna Bopitiya (I See ICT). Access video tutorials, notes, past paper grading, and exam prep.',
   keywords: ['Waruna Bopitiya', 'I See ICT', 'AL ICT', 'Sri Lanka', 'ICT class', 'ICT by Waruna Bopitiya', 'HelaCode'],
   authors: [{ name: 'Waruna Bopitiya' }],
   creator: 'Waruna Bopitiya',

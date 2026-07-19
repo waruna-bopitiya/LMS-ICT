@@ -71,14 +71,30 @@ export async function POST(request: NextRequest) {
           user_metadata: { phone_number: normalizedPhone },
         })
 
-      if (createError || !created.user) {
-        return NextResponse.json(
-          { error: createError?.message || 'Failed to create user' },
-          { status: 500 }
+      if (createError || !created?.user) {
+        // Fallback: If user already exists in auth.users (e.g. public.users row was deleted), find existing auth user
+        const { data: userList } = await admin.auth.admin.listUsers()
+        const foundAuthUser = userList?.users?.find(
+          u => u.email === email || u.phone === normalizedPhone || u.user_metadata?.phone_number === normalizedPhone
         )
-      }
 
-      userId = created.user.id
+        if (foundAuthUser) {
+          userId = foundAuthUser.id
+          await admin.auth.admin.updateUserById(userId, {
+            email,
+            password,
+            email_confirm: true,
+            phone_confirm: true,
+          })
+        } else {
+          return NextResponse.json(
+            { error: createError?.message || 'Failed to create user' },
+            { status: 500 }
+          )
+        }
+      } else {
+        userId = created.user.id
+      }
     } else {
       const { error: updateError } = await admin.auth.admin.updateUserById(
         userId,
