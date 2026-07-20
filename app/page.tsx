@@ -136,14 +136,13 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-transparent relative overflow-hidden">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
       {/* Background decoration grid */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
       <div className="absolute top-0 right-0 -z-10 h-[500px] w-[500px] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-20 left-0 -z-10 h-[500px] w-[500px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
 

@@ -30,7 +30,7 @@ export default async function RefundPolicyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative flex flex-col justify-between">
+    <div className="min-h-screen bg-transparent relative flex flex-col justify-between">
       <div>
         <Navbar user={user} isAdmin={isAdmin} fullName={fullName} />
 

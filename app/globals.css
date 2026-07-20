@@ -140,9 +140,9 @@
 
 /* Subtle dot-grid background used behind hero / section canvases */
 .bg-grid-pattern {
-  background-size: 32px 32px;
-  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+  background-size: 28px 28px;
+  background-image: radial-gradient(circle, color-mix(in oklch, var(--foreground) 25%, transparent) 1.5px, transparent 1.5px);
+  mask-image: linear-gradient(180deg, black 0%, black 90%, transparent 100%);
 }
 
 /* Frosted surface used for floating panels / contact card */

@@ -45,10 +45,9 @@ export default async function StudentDashboard() {
   const pendingEnrollments = enrollments?.filter(e => e.status === 'pending') || []
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-transparent relative overflow-hidden">
       
       {/* Background patterns */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" />
       <div className="absolute top-0 right-0 -z-10 h-[300px] w-[300px] rounded-full bg-primary/5 blur-[80px] pointer-events-none" />
 
       {/* Navigation */}

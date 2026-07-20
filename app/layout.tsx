@@ -45,6 +45,8 @@ export const metadata: Metadata = {
   },
 }
 
+import InteractiveDotGrid from '@/components/InteractiveDotGrid'
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -59,7 +61,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <InteractiveDotGrid />
+          <div className="relative z-10 min-h-screen">
+            {children}
+          </div>
         </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
