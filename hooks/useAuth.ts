@@ -19,10 +19,19 @@ export function useAuth() {
       try {
         const {
           data: { user },
+          error,
         } = await supabase.auth.getUser()
-        setUser(user)
-      } catch (error) {
-        console.error('Error getting user:', error)
+
+        if (error) {
+          if (error.message?.includes('Refresh Token') || error.message?.includes('JWT')) {
+            await supabase.auth.signOut({ scope: 'local' })
+          }
+          setUser(null)
+        } else {
+          setUser(user)
+        }
+      } catch {
+        setUser(null)
       } finally {
         setLoading(false)
       }

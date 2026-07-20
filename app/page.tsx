@@ -460,9 +460,10 @@ export default async function Home() {
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} I See ICT by Waruna Bopitiya. All rights reserved.
           </p>
-          <div className="flex gap-6 text-xs text-muted-foreground">
-            <Link href="/" className="hover:text-primary transition-colors">Privacy Policy</Link>
-            <Link href="/" className="hover:text-primary transition-colors">Terms of Service</Link>
+          <div className="flex flex-wrap justify-center md:justify-end gap-6 text-xs text-muted-foreground">
+            <Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+            <Link href="/terms-and-conditions" className="hover:text-primary transition-colors">Terms & Conditions</Link>
+            <Link href="/refund-policy" className="hover:text-primary transition-colors">Refund Policy</Link>
           </div>
         </div>
       </footer>
