@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { redirect } from 'next/navigation'
 import { requireCompletedProfile } from '@/lib/auth/profile'
 import Navbar from '@/components/Navbar'
-import { BookOpen, Clock, CreditCard, Play, AlertCircle, ArrowRight } from 'lucide-react'
+import { BookOpen, Clock, CreditCard, Play, AlertCircle, ArrowRight, Award } from 'lucide-react'
 import { parseCourseDescription } from '@/lib/utils'
+import StudentMarksDashboard from '@/components/StudentMarksDashboard'
 
 export default async function StudentDashboard() {
   const supabase = await createClient()
@@ -128,6 +129,14 @@ export default async function StudentDashboard() {
             </CardContent>
           </Card>
 
+        </div>
+
+        {/* Paper Marks & Ranking Progress Section */}
+        <div className="mb-12">
+          <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2 tracking-tight">
+            <Award className="h-5 w-5 text-primary" /> Exam Results & Ranks
+          </h2>
+          <StudentMarksDashboard />
         </div>
 
         {/* Active Courses */}
