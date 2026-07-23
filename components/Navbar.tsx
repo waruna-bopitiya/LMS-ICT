@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import ThemeToggle from './ThemeToggle'
 import { Button } from '@/components/ui/button'
-import { Menu, X, Laptop, LogOut, LayoutDashboard, User, BookOpen, CreditCard, UserCheck, Users } from 'lucide-react'
+import { Menu, X, Laptop, LogOut, LayoutDashboard, User, BookOpen, CreditCard, UserCheck, Users, Award } from 'lucide-react'
 
 interface NavbarProps {
   user?: any
@@ -50,6 +50,7 @@ export default function Navbar({ user, isAdmin = false, fullName }: NavbarProps)
         { name: 'Student Directory', href: '/admin/students', icon: Users },
         { name: 'Manage Courses', href: '/admin/courses', icon: BookOpen },
         { name: 'Review Payments', href: '/admin/payments', icon: CreditCard },
+        { name: 'Update Marks', href: '/admin/marks', icon: Award },
       ]
     }
     return [

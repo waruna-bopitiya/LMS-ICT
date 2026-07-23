@@ -46,6 +46,7 @@ export const metadata: Metadata = {
 }
 
 import InteractiveDotGrid from '@/components/InteractiveDotGrid'
+import { Toaster } from '@/components/ui/sonner'
 
 export default function RootLayout({
   children,
@@ -65,6 +66,7 @@ export default function RootLayout({
           <div className="relative z-10 min-h-screen">
             {children}
           </div>
+          <Toaster />
         </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
