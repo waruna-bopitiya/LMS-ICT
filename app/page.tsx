@@ -86,11 +86,11 @@ export default async function Home() {
   const faqs = [
     {
       q: 'How do I register for a class?',
-      a: 'Click on "Sign In" or "Get Started" and enter your mobile phone number. You will receive a verification OTP. Once verified, complete your profile details to access the course catalog.'
+      a: 'Click on "Sign In" or "Get Started" and enter your mobile phone number. You will receive a verification OTP. Once verified, complete your profile details to access the class catalog.'
     },
     {
-      q: 'How do I pay for courses?',
-      a: 'Each course has a bank transfer payment option. Transfer the exact amount to the bank account specified in the enrollment form, upload a photo of the bank slip, and our team will approve your access within 24 hours.'
+      q: 'How do I pay for classes?',
+      a: 'Each class has a bank transfer payment option. Transfer the exact amount to the bank account specified in the enrollment form, upload a photo of the bank slip, and our team will approve your access within 24 hours.'
     },
     {
       q: 'Can I watch the videos on my phone?',
@@ -98,7 +98,7 @@ export default async function Home() {
     },
     {
       q: 'What should I do if my payment is pending for too long?',
-      a: 'Payment approvals normally take less than 24 hours. If it takes longer, please contact our support hotline with your phone number and course details.'
+      a: 'Payment approvals normally take less than 24 hours. If it takes longer, please contact our support hotline with your phone number and class details.'
     }
   ]
 
@@ -177,7 +177,7 @@ export default async function Home() {
               </Link>
               <a href="#courses">
                 <Button size="lg" variant="outline" className="border-border text-foreground hover:bg-secondary font-semibold px-8 py-6 text-base rounded-lg transition-transform hover:-translate-y-0.5">
-                  Browse Courses
+                  Browse Classes
                 </Button>
               </a>
             </>
@@ -232,10 +232,10 @@ export default async function Home() {
       <section id="courses" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 tracking-tight">
-            Our Available Courses
+            Our Available Classes
           </h2>
           <p className="text-muted-foreground text-lg">
-            Enroll today and start learning immediately. Select the course that fits your syllabus.
+            Enroll today and start learning immediately. Select the class that fits your syllabus.
           </p>
         </ScrollReveal>
 
@@ -283,7 +283,7 @@ export default async function Home() {
                           <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest">One-Time Fee</span>
                         </div>
                         <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg">
-                          View Course Contents
+                          View Class Contents
                         </Button>
                       </CardContent>
                     </Card>
@@ -295,7 +295,7 @@ export default async function Home() {
         ) : (
           <ScrollReveal className="tech-card text-center py-16 px-6 max-w-md mx-auto shadow-none">
             <BookOpen className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-1">No Courses Available</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-1">No Classes Available</h3>
             <p className="text-sm text-muted-foreground mb-6">Our upcoming classes will be published here soon.</p>
           </ScrollReveal>
         )}
@@ -344,7 +344,7 @@ export default async function Home() {
               <div className="pt-2">
                 <a href="#courses">
                   <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 rounded-lg">
-                    View Course Catalog
+                    View Class Catalog
                   </Button>
                 </a>
               </div>
@@ -395,7 +395,7 @@ export default async function Home() {
               <div>
                 <h2 className="text-3xl font-bold text-foreground mb-3 tracking-tight">Get in Touch</h2>
                 <p className="text-muted-foreground text-base">
-                  Need any assistance with payment uploads, log in, or have queries about the course materials? Contact us directly.
+                  Need any assistance with payment uploads, log in, or have queries about the class materials? Contact us directly.
                 </p>
               </div>
 

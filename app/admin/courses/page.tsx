@@ -45,12 +45,12 @@ export default async function AdminCoursesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">Manage Courses</h1>
-            <p className="text-muted-foreground">Create, edit, and manage your courses syllabus</p>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Manage Classes</h1>
+            <p className="text-muted-foreground">Create, edit, and manage your classes syllabus</p>
           </div>
           <Link href="/admin/add-course">
             <Button className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-6 rounded-xl h-11">
-              + Create Course
+              + Create Class
             </Button>
           </Link>
         </div>
@@ -74,7 +74,7 @@ export default async function AdminCoursesPage() {
                         <div className="text-2xl font-bold text-primary">
                           Rs. {Number(course.price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </div>
-                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Course Fee</p>
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Class Fee</p>
                       </div>
                     </div>
                   </CardHeader>
@@ -83,7 +83,7 @@ export default async function AdminCoursesPage() {
                       Created: {new Date(course.created_at).toLocaleDateString()}
                     </div>
                     <Button variant="outline" className="border-border text-foreground hover:bg-secondary font-semibold rounded-xl h-9">
-                      Manage Course Contents
+                      Manage Class Contents
                     </Button>
                   </CardContent>
                 </Card>
@@ -92,13 +92,13 @@ export default async function AdminCoursesPage() {
           </div>
         ) : (
           <div className="glass-panel text-center py-16 px-6 max-w-md mx-auto rounded-2xl">
-            <h3 className="text-xl font-bold text-foreground mb-2">No Courses Yet</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">No Classes Yet</h3>
             <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-              Create your first ICT syllabus course module to get started.
+              Create your first ICT syllabus class module to get started.
             </p>
             <Link href="/admin/add-course">
               <Button className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold rounded-xl px-6 h-11">
-                Create Course
+                Create Class
               </Button>
             </Link>
           </div>

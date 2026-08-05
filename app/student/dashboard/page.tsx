@@ -81,7 +81,7 @@ export default async function StudentDashboard() {
           <Card className="tech-card shadow-none">
             <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Active Courses
+                Active Classes
               </CardTitle>
               <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                 <BookOpen className="h-5 w-5" />
@@ -143,7 +143,7 @@ export default async function StudentDashboard() {
         {activeEnrollments.length > 0 && (
           <div className="mb-12">
             <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2 tracking-tight">
-              <BookOpen className="h-5 w-5 text-primary" /> My Subscribed Courses
+              <BookOpen className="h-5 w-5 text-primary" /> My Subscribed Classes
             </h2>
             <div className="grid md:grid-cols-2 gap-5">
               {activeEnrollments.map((enrollment) => {
@@ -227,7 +227,7 @@ export default async function StudentDashboard() {
                             Awaiting Admin Review
                           </p>
                           <p className="text-xs text-amber-700/80 dark:text-amber-400/80 mt-1 leading-relaxed">
-                            Your bank slip is currently being reviewed. Your course materials and lessons will unlock immediately once approved.
+                            Your bank slip is currently being reviewed. Your class materials and lessons will unlock immediately once approved.
                           </p>
                         </div>
                       </div>
@@ -243,13 +243,13 @@ export default async function StudentDashboard() {
         {activeEnrollments.length === 0 && pendingEnrollments.length === 0 && (
           <div className="tech-card shadow-none text-center py-16 px-6 max-w-lg mx-auto mt-10">
             <BookOpen className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">No Active Courses</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-2">No Active Classes</h3>
             <p className="text-muted-foreground text-sm mb-8 leading-relaxed max-w-md mx-auto">
-              You are not enrolled in any courses yet. Browse our list of AL ICT course modules and start learning today!
+              You are not enrolled in any classes yet. Browse our list of AL ICT class modules and start learning today!
             </p>
             <Link href="/">
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg px-6 h-11 gap-1.5">
-                Browse Courses <ArrowRight className="h-4 w-4" />
+                Browse Classes <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>

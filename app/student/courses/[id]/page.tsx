@@ -42,11 +42,11 @@ export default async function CoursePage({
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center max-w-sm glass-panel p-8 rounded-2xl border-border">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">Course Not Found</h1>
-          <p className="text-muted-foreground text-sm mb-6">This course syllabus may have been moved or archived.</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Class Not Found</h1>
+          <p className="text-muted-foreground text-sm mb-6">This class syllabus may have been moved or archived.</p>
           <Link href="/">
             <Button className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold rounded-xl">
-              Back to Courses
+              Back to Classes
             </Button>
           </Link>
         </div>
@@ -113,7 +113,7 @@ export default async function CoursePage({
               <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
               <div className="relative">
                 <span className="text-primary text-xs font-bold uppercase tracking-widest bg-primary/10 border border-primary/20 px-3 py-0.5 rounded-full inline-block mb-4">
-                  COURSE SYLLABUS
+                  CLASS SYLLABUS
                 </span>
                 <h1 className="text-3xl sm:text-4xl font-bold text-foreground leading-tight">
                   {course.title}
@@ -132,7 +132,7 @@ export default async function CoursePage({
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {enrollment && enrollment.status === 'pending'
                     ? 'Your enrollment is currently pending approval. Please wait for the admin to verify your deposit slip.'
-                    : 'You must enroll in this course to gain access to lesson videos, PDFs, and assignment submissions.'}
+                    : 'You must enroll in this class to gain access to lesson videos, PDFs, and assignment submissions.'}
                 </p>
               </div>
             )}
@@ -207,7 +207,7 @@ export default async function CoursePage({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground text-sm italic">No PDFs available for this course yet.</p>
+                    <p className="text-muted-foreground text-sm italic">No PDFs available for this class yet.</p>
                   )}
                 </section>
 

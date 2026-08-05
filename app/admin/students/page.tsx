@@ -243,7 +243,7 @@ export default function AdminStudentsPage() {
             }`}
           >
             <BookOpen className="h-5 w-5" />
-            Course Enrollments
+            Class Enrollments
             <span className="text-xs bg-primary/10 border border-primary/20 text-primary px-2.5 py-0.5 rounded-full font-semibold">
               {enrollments.length}
             </span>
@@ -365,7 +365,7 @@ export default function AdminStudentsPage() {
                 onChange={(e) => setSelectedCourseFilter(e.target.value)}
                 className="flex h-11 w-full sm:w-[240px] rounded-xl border border-border bg-secondary/20 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               >
-                <option value="" className="bg-background text-foreground">-- All Courses --</option>
+                <option value="" className="bg-background text-foreground">-- All Classes --</option>
                 {courses.map((course) => (
                   <option key={course.id} value={course.id} className="bg-background text-foreground">
                     {course.title}
@@ -382,7 +382,7 @@ export default function AdminStudentsPage() {
                     <thead>
                       <tr className="border-b border-border bg-secondary/30 text-xs text-muted-foreground font-bold uppercase tracking-wider">
                         <th className="p-4 sm:p-5">Student</th>
-                        <th className="p-4 sm:p-5">Class Course</th>
+                        <th className="p-4 sm:p-5">Enrolled Class</th>
                         <th className="p-4 sm:p-5">Enroll Date</th>
                         <th className="p-4 sm:p-5">Status</th>
                       </tr>
@@ -407,7 +407,7 @@ export default function AdminStudentsPage() {
                           </td>
                           <td className="p-4 sm:p-5">
                             <div>
-                              <div className="font-bold text-foreground">{enrollment.courses?.title || 'Unknown Course'}</div>
+                              <div className="font-bold text-foreground">{enrollment.courses?.title || 'Unknown Class'}</div>
                               <div className="text-xs text-primary font-bold mt-0.5">
                                 Rs. {Number(enrollment.courses?.price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                               </div>

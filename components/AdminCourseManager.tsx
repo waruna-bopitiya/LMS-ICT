@@ -253,13 +253,13 @@ export default function AdminCourseManager({
               />
             </div>
 
-            {/* Course Cover Photo Uploader */}
+            {/* Class Cover Photo Uploader */}
             <div className="sm:col-span-2 grid sm:grid-cols-[150px_1fr] gap-4 items-center border border-border/60 p-4 rounded-xl bg-secondary/5">
               <div className="relative h-[100px] w-full sm:w-[150px] rounded-lg border border-border/80 bg-secondary/20 flex items-center justify-center overflow-hidden">
                 {courseForm.imageUrl ? (
                   <img
                     src={courseForm.imageUrl}
-                    alt="Course cover preview"
+                    alt="Class cover preview"
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -272,7 +272,7 @@ export default function AdminCourseManager({
               <div className="space-y-3 w-full">
                 <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                   <Upload className="h-3.5 w-3.5 text-primary" />
-                  Course Cover Photo
+                  Class Cover Photo
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 relative">

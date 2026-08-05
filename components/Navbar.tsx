@@ -38,7 +38,7 @@ export default function Navbar({ user, isAdmin = false, fullName }: NavbarProps)
     if (!user) {
       return [
         { name: 'Home', href: '/' },
-        { name: 'Courses', href: '/#courses' },
+        { name: 'Classes', href: '/#courses' },
         { name: 'About', href: '/#about' },
         { name: 'FAQ', href: '/#faq' },
       ]
@@ -48,13 +48,13 @@ export default function Navbar({ user, isAdmin = false, fullName }: NavbarProps)
         { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Activate Classes', href: '/admin/activate', icon: UserCheck },
         { name: 'Student Directory', href: '/admin/students', icon: Users },
-        { name: 'Manage Courses', href: '/admin/courses', icon: BookOpen },
+        { name: 'Manage Classes', href: '/admin/courses', icon: BookOpen },
         { name: 'Review Payments', href: '/admin/payments', icon: CreditCard },
         { name: 'Update Marks', href: '/admin/marks', icon: Award },
       ]
     }
     return [
-      { name: 'Browse Courses', href: '/', icon: BookOpen },
+      { name: 'Browse Classes', href: '/', icon: BookOpen },
       { name: 'Student Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
       // { name: 'My Profile', href: '/student/profile', icon: User },
     ]

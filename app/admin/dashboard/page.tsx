@@ -52,7 +52,7 @@ export default async function AdminDashboard() {
             <span className="status-dot" /> Admin Console
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2 tracking-tight">Admin Dashboard</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">Manage courses, videos, enrollments, and student payments.</p>
+          <p className="text-muted-foreground text-sm sm:text-base">Manage classes, videos, enrollments, and student payments.</p>
         </div>
 
         {/* Stats */}
@@ -60,7 +60,7 @@ export default async function AdminDashboard() {
           <Card className="tech-card shadow-none">
             <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Total Courses
+                Total Classes
               </CardTitle>
               <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                 <BookOpen className="h-5 w-5" />
@@ -125,12 +125,12 @@ export default async function AdminDashboard() {
                 <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-3">
                   <BookOpen className="h-5 w-5" />
                 </div>
-                <CardTitle className="text-foreground font-semibold">Manage Courses</CardTitle>
-                <CardDescription>Create, edit, and delete courses</CardDescription>
+                <CardTitle className="text-foreground font-semibold">Manage Classes</CardTitle>
+                <CardDescription>Create, edit, and delete classes</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg">
-                  Go to Courses
+                  Go to Classes
                 </Button>
               </CardContent>
             </Card>
@@ -161,8 +161,8 @@ export default async function AdminDashboard() {
                 <div className="h-10 w-10 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-3">
                   <PlusCircle className="h-5 w-5" />
                 </div>
-                <CardTitle className="text-foreground font-semibold">Create Course</CardTitle>
-                <CardDescription>Add a new course with videos</CardDescription>
+                <CardTitle className="text-foreground font-semibold">Create Class</CardTitle>
+                <CardDescription>Add a new class with videos</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg">

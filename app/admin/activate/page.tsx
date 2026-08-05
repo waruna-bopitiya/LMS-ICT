@@ -194,7 +194,7 @@ export default function AdminActivatePage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-foreground">Manual Class Activation</h1>
-            <p className="text-muted-foreground text-sm">Instantly activate courses for registered students</p>
+            <p className="text-muted-foreground text-sm">Instantly activate classes for registered students</p>
           </div>
         </div>
 
@@ -353,7 +353,7 @@ export default function AdminActivatePage() {
                 <form onSubmit={handleActivate} className="space-y-4 pt-2">
                   <div className="space-y-2">
                     <label htmlFor="course" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                      Select Course to Activate
+                      Select Class to Activate
                     </label>
                     <select
                       id="course"
@@ -362,7 +362,7 @@ export default function AdminActivatePage() {
                       required
                       className="flex h-11 w-full rounded-xl border border-border bg-secondary/20 px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <option value="" disabled className="bg-background text-foreground">-- Select a course class --</option>
+                      <option value="" disabled className="bg-background text-foreground">-- Select a class --</option>
                       {courses.map((course) => (
                         <option key={course.id} value={course.id} className="bg-background text-foreground">
                           {course.title} - Rs. {Number(course.price).toLocaleString()}
