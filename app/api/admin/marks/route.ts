@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { sendFitsms } from '@/lib/sms/fitsms'
 
 // Verify if user is admin
 async function checkAdmin() {
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
     // 1. Fetch paper details to get the configured total_marks limit
     const { data: paper, error: paperError } = await admin
       .from('papers')
-      .select('total_marks')
+      .select('name, total_marks')
       .eq('id', paperId)
       .single()
 
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
     // 2. Look up student UUID using their student_id
     const { data: student, error: studentError } = await admin
       .from('users')
-      .select('id')
+      .select('id, phone_number, full_name')
       .eq('student_id', Number(studentId))
       .single()
 
@@ -119,6 +120,24 @@ export async function POST(request: Request) {
     if (upsertError) {
       console.error('Error saving marks:', upsertError)
       return NextResponse.json({ error: upsertError.message }, { status: 500 })
+    }
+
+    // 4. Send SMS notification to the student using FitSMS
+    if (student.phone_number) {
+      try {
+        const formattedPhone = student.phone_number.trim()
+        const studentName = student.full_name || 'Student'
+        const pct = percentage.toFixed(2)
+        
+        const smsMessage = `Dear ${studentName}, your score for "${paper.name}" is ${pct}%. Check Rank & details on I SEE ICT dashboard.\n- Waruna Bopitiya -`
+        
+        await sendFitsms({
+          to: formattedPhone,
+          message: smsMessage
+        })
+      } catch (smsErr) {
+        console.error('Failed to send SMS notification:', smsErr)
+      }
     }
 
     return NextResponse.json({ success: true, message: 'Marks updated successfully', data })
