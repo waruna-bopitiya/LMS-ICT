@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { ArrowLeft, Award, Plus, Search, Trash2, RefreshCw, Calculator, FileText, BookOpen } from 'lucide-react'
+import { ArrowLeft, Award, Plus, Search, Trash2, RefreshCw, Calculator, FileText, BookOpen, Send } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -51,6 +51,7 @@ export default function AdminMarksPage() {
     marksObtained: '',
   })
   const [submittingScore, setSubmittingScore] = useState(false)
+  const [sendingSmsIds, setSendingSmsIds] = useState<Record<string, boolean>>({})
 
   // Data states
   const [papers, setPapers] = useState<Paper[]>([])
@@ -276,6 +277,29 @@ export default function AdminMarksPage() {
     } catch (err) {
       console.error('Error deleting record:', err)
       toast.error('An error occurred during deletion')
+    }
+  }
+
+  // Send SMS manually
+  const handleSendSms = async (recordId: string, studentId: number) => {
+    setSendingSmsIds(prev => ({ ...prev, [recordId]: true }))
+    try {
+      const response = await fetch('/api/admin/marks/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recordId })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        toast.success(`SMS notification sent to Student ID ${studentId}!`)
+      } else {
+        toast.error(data.error || 'Failed to send SMS')
+      }
+    } catch (err) {
+      console.error('Error sending SMS:', err)
+      toast.error('An error occurred while sending SMS')
+    } finally {
+      setSendingSmsIds(prev => ({ ...prev, [recordId]: false }))
     }
   }
 
@@ -566,8 +590,23 @@ export default function AdminMarksPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  className="text-primary hover:bg-primary/10 hover:text-primary mr-2"
+                                  disabled={sendingSmsIds[record.id]}
+                                  onClick={() => handleSendSms(record.id, record.student_id)}
+                                  title="Send SMS Notification"
+                                >
+                                  {sendingSmsIds[record.id] ? (
+                                    <RefreshCw className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Send className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
                                   className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                   onClick={() => handleDeleteRecord(record.id, record.student_id, record.paper_name)}
+                                  title="Delete Record"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>

@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
-import { sendFitsms } from '@/lib/sms/fitsms'
 
 // Verify if user is admin
 async function checkAdmin() {
@@ -120,24 +119,6 @@ export async function POST(request: Request) {
     if (upsertError) {
       console.error('Error saving marks:', upsertError)
       return NextResponse.json({ error: upsertError.message }, { status: 500 })
-    }
-
-    // 4. Send SMS notification to the student using FitSMS
-    if (student.phone_number) {
-      try {
-        const formattedPhone = student.phone_number.trim()
-        const studentName = student.full_name || 'Student'
-        const pct = percentage.toFixed(2)
-        
-        const smsMessage = `Dear ${studentName}, your score for "${paper.name}" is ${pct}%. Check Rank & details on I SEE ICT dashboard.\n- Waruna Bopitiya -`
-        
-        await sendFitsms({
-          to: formattedPhone,
-          message: smsMessage
-        })
-      } catch (smsErr) {
-        console.error('Failed to send SMS notification:', smsErr)
-      }
     }
 
     return NextResponse.json({ success: true, message: 'Marks updated successfully', data })
