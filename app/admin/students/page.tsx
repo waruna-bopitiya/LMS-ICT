@@ -7,7 +7,8 @@ import Navbar from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, BookOpen, Search, UserCheck, GraduationCap, School, MapPin, Phone, Calendar, ArrowUpRight, Shield } from 'lucide-react'
+import { Users, BookOpen, Search, UserCheck, GraduationCap, School, MapPin, Phone, Calendar, ArrowUpRight, Shield, UserMinus, RefreshCw } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function AdminStudentsPage() {
   const router = useRouter()
@@ -22,6 +23,7 @@ export default function AdminStudentsPage() {
   const [enrollments, setEnrollments] = useState<any[]>([])
   const [courses, setCourses] = useState<any[]>([])
   const [loadingData, setLoadingData] = useState(true)
+  const [revokingId, setRevokingId] = useState<string | null>(null)
 
   // Search & Filter state
   const [studentSearch, setStudentSearch] = useState('')
@@ -148,6 +150,32 @@ export default function AdminStudentsPage() {
 
     checkAdmin()
   }, [router, supabase])
+
+  const handleRevokeEnrollment = async (enrollmentId: string, studentName: string) => {
+    if (!confirm(`Are you sure you want to revoke access and delete enrollment for ${studentName}?`)) {
+      return
+    }
+
+    setRevokingId(enrollmentId)
+    try {
+      const response = await fetch(`/api/admin/manual-enroll?id=${enrollmentId}`, {
+        method: 'DELETE',
+      })
+
+      const data = await response.json()
+      if (response.ok) {
+        toast.success('Access revoked successfully')
+        setEnrollments(prev => prev.filter(e => e.id !== enrollmentId))
+      } else {
+        toast.error(data.error || 'Failed to revoke enrollment')
+      }
+    } catch (err) {
+      console.error('Error revoking enrollment:', err)
+      toast.error('An error occurred during revocation')
+    } finally {
+      setRevokingId(null)
+    }
+  }
 
   // Filter students based on search
   const filteredStudents = students.filter(student => {
@@ -429,6 +457,21 @@ export default function AdminStudentsPage() {
                                 {enrollment.status === 'active' ? 'Active' : 'Pending Approval'}
                               </span>
                               
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={revokingId === enrollment.id}
+                                onClick={() => handleRevokeEnrollment(enrollment.id, enrollment.users?.full_name || 'Student')}
+                                className="text-[11px] h-7 font-bold text-destructive hover:bg-destructive/10 hover:text-destructive mt-1 flex items-center gap-1.5 px-2.5 py-0.5 rounded border border-destructive/20"
+                              >
+                                {revokingId === enrollment.id ? (
+                                  <RefreshCw className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <UserMinus className="h-3.5 w-3.5" />
+                                )}
+                                Revoke Access
+                              </Button>
+
                               {enrollment.payments && enrollment.payments.bank_slip_url && enrollment.payments.bank_slip_url !== 'manual-admin-activation' && (
                                 <a
                                   href={enrollment.payments.bank_slip_url}

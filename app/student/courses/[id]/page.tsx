@@ -59,7 +59,7 @@ export default async function CoursePage({
   // Check if user is enrolled
   const { data: enrollment } = await supabase
     .from('enrollments')
-    .select('*')
+    .select('*, payments(*)')
     .eq('user_id', user.id)
     .eq('course_id', id)
     .single()
@@ -130,9 +130,9 @@ export default async function CoursePage({
                 <AlertCircle className="h-10 w-10 text-muted-foreground/60 mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-foreground mb-1">Content Locked</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  {enrollment && enrollment.status === 'pending'
+                  {enrollment && enrollment.status === 'pending' && (enrollment.payments as any)?.bank_slip_url
                     ? 'Your enrollment is currently pending approval. Please wait for the admin to verify your deposit slip.'
-                    : 'You must enroll in this course to gain access to lesson videos, PDFs, and assignment submissions.'}
+                    : 'You must enroll in this class to gain access to lesson videos, PDFs, and assignment submissions.'}
                 </p>
               </div>
             )}
@@ -301,17 +301,19 @@ export default async function CoursePage({
                 <CardDescription className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-1">One-time payment</CardDescription>
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-4">
-                {enrollment ? (
+                {enrollment && (enrollment.status === 'active' || (enrollment.payments as any)?.bank_slip_url) ? (
                   <div className="space-y-4">
                     <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
                       <p className="text-sm text-foreground font-bold flex items-center justify-between">
                         <span>Enrollment Status:</span>
-                        <span className="capitalize text-primary">{enrollment.status}</span>
+                        <span className="capitalize text-primary">
+                          {enrollment.status === 'pending' ? 'Awaiting Review' : enrollment.status}
+                        </span>
                       </p>
                     </div>
                     {enrollment.status === 'pending' && (
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Our support team is reviewing your uploaded deposit slip. Your courses will unlock shortly.
+                        Our support team is reviewing your uploaded deposit slip. Your classes will unlock shortly.
                       </p>
                     )}
                   </div>
