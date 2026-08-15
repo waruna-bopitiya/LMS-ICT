@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -57,14 +58,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Delete associated enrollment
-    const { error: enrollmentError } = await supabase
+    // Deleted through the service role. The previous anon-key delete matched no
+    // rows under RLS and only logged the failure, so rejected payments left
+    // their enrollment row behind.
+    const { error: enrollmentError } = await createAdminClient()
       .from('enrollments')
       .delete()
       .eq('payment_id', paymentId)
 
     if (enrollmentError) {
-      console.error('Error deleting enrollment:', enrollmentError)
+      console.error('Error deleting enrollment:', enrollmentError.message)
+      return NextResponse.json(
+        { error: 'Payment rejected but enrollment could not be removed' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({

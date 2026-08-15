@@ -9,6 +9,14 @@ import { parseCourseDescription } from '@/lib/utils'
 import TypewriterCode from '@/components/TypewriterCode'
 import type { Metadata } from 'next'
 
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'helacode-badge': Record<string, unknown>
+    }
+  }
+}
+
 export const metadata: Metadata = {
   title: 'Waruna Bopitiya | I See ICT - Premium A/L ICT Classes',
   description: 'Official A/L ICT learning platform by Waruna Bopitiya (I See ICT). Master Advanced Level Information Technology with structured lessons, past papers, and live grading.',
@@ -465,6 +473,9 @@ export default async function Home() {
             <Link href="/refund-policy" className="hover:text-primary transition-colors">Refund Policy</Link>
           </div>
         </div>
+        <helacode-badge>
+          
+        </helacode-badge>
       </footer>
 
     </div>

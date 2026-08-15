@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { parseCourseDescription, formatCourseDescription } from '@/lib/utils'
+import { parseCourseDescription, formatCourseDescription, parseVideoTitle, formatVideoTitle } from '@/lib/utils'
 import { Image as ImageIcon, Upload } from 'lucide-react'
+import { AssetLink } from '@/components/SignedAsset'
 
 type Course = {
   id: string
@@ -98,7 +99,7 @@ export default function AdminCourseManager({
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Upload failed')
-      return data.url as string
+      return data.path as string
     } finally {
       setUploading(false)
     }
@@ -493,9 +494,9 @@ export default function AdminCourseManager({
 
             <div className="space-y-2">
               {materials.map(material => (
-                <a key={material.id} href={material.file_url} target="_blank" rel="noreferrer" className="block rounded-md border border-border p-3 text-sm text-foreground hover:bg-secondary/10">
+                <AssetLink key={material.id} path={material.file_url} className="block rounded-md border border-border p-3 text-sm text-foreground hover:bg-secondary/10">
                   {material.title}
-                </a>
+                </AssetLink>
               ))}
             </div>
           </CardContent>
@@ -558,9 +559,9 @@ export default function AdminCourseManager({
                       </div>
                       {submission.answer_text && <p className="mt-1 text-muted-foreground">{submission.answer_text}</p>}
                       {submission.file_url && (
-                        <a href={submission.file_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-primary">
+                        <AssetLink path={submission.file_url} className="mt-2 inline-block text-primary">
                           Open submitted file
-                        </a>
+                        </AssetLink>
                       )}
                     </div>
                   ))}

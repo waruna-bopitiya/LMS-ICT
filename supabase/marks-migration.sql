@@ -61,3 +61,10 @@ select
 from public.student_marks sm
 join public.users u on sm.user_id = u.id
 join public.papers p on sm.paper_id = p.id;
+
+-- Views run with owner privileges and cannot carry RLS policies, so reading
+-- this view directly bypasses the per-student policy on student_marks. Rank and
+-- class average are real cross-student aggregates, so the view must keep those
+-- privileges to compute them — instead, direct access is removed. Only the
+-- service role reads it, from API routes that filter by the caller.
+revoke all on public.student_marks_with_ranks from anon, authenticated;

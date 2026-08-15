@@ -34,7 +34,12 @@ export async function GET(request: Request) {
       if (!isNaN(Number(search))) {
         query = query.eq('student_id', Number(search))
       } else {
-        query = query.or(`full_name.ilike.%${search}%,paper_name.ilike.%${search}%`)
+        // Commas, parentheses and dots are PostgREST filter syntax, so raw
+        // interpolation here lets a search term restructure the filter.
+        const safe = search.replace(/[,()."\\*]/g, ' ').trim()
+        if (safe) {
+          query = query.or(`full_name.ilike.%${safe}%,paper_name.ilike.%${safe}%`)
+        }
       }
     }
 
@@ -76,7 +81,7 @@ export async function POST(request: Request) {
     // 1. Fetch paper details to get the configured total_marks limit
     const { data: paper, error: paperError } = await admin
       .from('papers')
-      .select('total_marks')
+      .select('name, total_marks')
       .eq('id', paperId)
       .single()
 
@@ -91,7 +96,7 @@ export async function POST(request: Request) {
     // 2. Look up student UUID using their student_id
     const { data: student, error: studentError } = await admin
       .from('users')
-      .select('id')
+      .select('id, phone_number, full_name')
       .eq('student_id', Number(studentId))
       .single()
 

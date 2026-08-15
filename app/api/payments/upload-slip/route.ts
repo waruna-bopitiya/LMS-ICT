@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { uploadToSupabase } from '@/lib/supabase/admin'
+import { uploadToSupabase, UploadValidationError } from '@/lib/supabase/admin'
+import { startEnrollmentAttempt } from '@/lib/enrollment'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -11,72 +12,47 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
     const formData = await request.formData()
     const file = formData.get('file') as File
-    const courseId = formData.get('courseId') as string
-    const amount = formData.get('amount') as string
+    const rawCourseId = String(formData.get('courseId') || '')
 
-    if (!file || !courseId || !amount) {
+    if (!file || !rawCourseId) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Bank slip and class are required' },
         { status: 400 }
       )
     }
 
-    // Upload to Supabase Storage
-    const filename = `bank-slips/${user.id}/${courseId}/${Date.now()}-${file.name}`
-    const publicUrl = await uploadToSupabase(file, filename)
+    const courseId = rawCourseId.replace(/[^a-zA-Z0-9-]/g, '')
 
-    // Create payment record in database
-    const { data: paymentData, error: paymentError } = await supabase
-      .from('payments')
-      .insert({
-        user_id: user.id,
-        course_id: courseId,
-        bank_slip_url: publicUrl,
-        amount: parseFloat(amount),
-        status: 'pending',
-      })
+    // Upload first: if the file is rejected there is no half-made payment row.
+    const path = await uploadToSupabase(
+      file,
+      `bank-slips/${user.id}/${courseId}`,
+      'any-attachment'
+    )
 
-      .select()
-      .single()
+    // The amount is read from the course inside this helper, never from the
+    // request. It also re-points the enrollment at this new payment, so a slip
+    // uploaded after an abandoned online checkout still activates on approval.
+    const attempt = await startEnrollmentAttempt(user.id, courseId, path)
 
-    if (paymentError) {
-      return NextResponse.json(
-        { error: 'Failed to save payment record' },
-        { status: 500 }
-      )
-    }
-
-    // Create enrollment record (initially pending)
-    const { error: enrollmentError } = await supabase
-      .from('enrollments')
-      .insert({
-        user_id: user.id,
-        course_id: courseId,
-        payment_id: paymentData.id,
-        status: 'pending',
-      })
-
-    if (enrollmentError && !enrollmentError.message.includes('duplicate')) {
-      return NextResponse.json(
-        { error: 'Failed to create enrollment' },
-        { status: 500 }
-      )
+    if (!attempt.ok) {
+      return NextResponse.json({ error: attempt.error }, { status: attempt.status })
     }
 
     return NextResponse.json({
       success: true,
       message: 'Bank slip uploaded successfully',
-      payment: paymentData,
+      paymentId: attempt.paymentId,
     })
   } catch (error) {
+    if (error instanceof UploadValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
     console.error('Bank slip upload error:', error)
     return NextResponse.json(
       { error: 'Failed to upload bank slip' },

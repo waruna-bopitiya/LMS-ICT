@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -10,8 +11,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fetch marks with ranks for this logged-in student from the view
-    const { data, error } = await supabase
+    // The ranking view is no longer readable by anon or authenticated roles:
+    // it computes cross-student aggregates, so it must run with owner rights
+    // and cannot carry RLS. Access goes through the service role here, scoped
+    // to the id resolved from the session rather than one supplied by the
+    // caller — that filter is the authorization.
+    const { data, error } = await createAdminClient()
       .from('student_marks_with_ranks')
       .select('*')
       .eq('user_id', user.id)
