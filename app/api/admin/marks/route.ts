@@ -34,7 +34,12 @@ export async function GET(request: Request) {
       if (!isNaN(Number(search))) {
         query = query.eq('student_id', Number(search))
       } else {
-        query = query.or(`full_name.ilike.%${search}%,paper_name.ilike.%${search}%`)
+        // Commas, parentheses and dots are PostgREST filter syntax, so raw
+        // interpolation here lets a search term restructure the filter.
+        const safe = search.replace(/[,()."\\*]/g, ' ').trim()
+        if (safe) {
+          query = query.or(`full_name.ilike.%${safe}%,paper_name.ilike.%${safe}%`)
+        }
       }
     }
 

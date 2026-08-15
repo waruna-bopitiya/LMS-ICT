@@ -131,10 +131,17 @@ create policy "Users can read their own profile"
   on public.users for select
   using (auth.uid() = id or public.is_admin());
 
+-- RLS restricts which row may be updated; column grants restrict which columns.
+-- Both are required — without the grant, is_admin is writable by its owner.
+-- See supabase/security-hardening-migration.sql for the guard trigger.
 create policy "Users can update their own profile"
   on public.users for update
   using (auth.uid() = id)
   with check (auth.uid() = id);
+
+revoke update on public.users from authenticated;
+grant update (full_name, email, school, district, guardian_phone)
+  on public.users to authenticated;
 
 create policy "Anyone can view courses"
   on public.courses for select
@@ -179,9 +186,16 @@ create policy "Admins can manage materials"
   using (public.is_admin())
   with check (public.is_admin());
 
-create policy "Users can create payments"
-  on public.payments for insert
-  with check (auth.uid() = user_id);
+-- status/approved_by/amount are pinned: a default is not a constraint, and the
+-- client controls every value it sends. Approval happens via the service role.
+create policy "Users can create pending payments"
+  on public.payments for insert to authenticated
+  with check (
+    auth.uid() = user_id
+    and status = 'pending'
+    and approved_by is null
+    and amount = (select price from public.courses where id = course_id)
+  );
 
 create policy "Users and admins can read payments"
   on public.payments for select
@@ -192,9 +206,15 @@ create policy "Admins can update payments"
   using (public.is_admin())
   with check (public.is_admin());
 
-create policy "Users can create enrollments"
-  on public.enrollments for insert
-  with check (auth.uid() = user_id);
+-- 'pending' is pinned here for the same reason as payments above: without it a
+-- student can insert status 'active' and unlock every paid course.
+create policy "Users can create pending enrollments"
+  on public.enrollments for insert to authenticated
+  with check (auth.uid() = user_id and status = 'pending');
+
+create policy "Admins can delete enrollments"
+  on public.enrollments for delete to authenticated
+  using (public.is_admin());
 
 create policy "Users and admins can read enrollments"
   on public.enrollments for select

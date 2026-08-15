@@ -1,23 +1,54 @@
 import { normalizePhoneNumber, phoneToAuthEmail } from '@/lib/auth/phone'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import {
+  checkAllRateLimits,
+  getClientIp,
+  rateLimitResponse,
+  recordRateLimitEvent,
+} from '@/lib/rate-limit'
 import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 
+// Failures are counted per phone number over a window rather than per OTP row.
+// A per-row counter resets every time a new code is requested, which hands an
+// attacker a fresh budget of guesses for the price of one SMS.
+const MAX_FAILURES = 5
+const FAILURE_WINDOW_SECONDS = 900
+
 export async function POST(request: NextRequest) {
-  const { phone, token } = await request.json()
-
-  if (!phone || !token) {
-    return NextResponse.json(
-      { error: 'Phone and token are required' },
-      { status: 400 }
-    )
-  }
-
   try {
+    const { phone, token } = await request.json()
+
+    if (!phone || !token) {
+      return NextResponse.json(
+        { error: 'Phone and token are required' },
+        { status: 400 }
+      )
+    }
+
     const normalizedPhone = normalizePhoneNumber(phone)
+
+    if (!normalizedPhone) {
+      return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 })
+    }
+
+    const ip = getClientIp(request)
+
+    const limit = await checkAllRateLimits([
+      { bucket: 'otp:verify:fail', subject: normalizedPhone, limit: MAX_FAILURES, windowSeconds: FAILURE_WINDOW_SECONDS },
+      { bucket: 'otp:verify:fail:ip', subject: ip, limit: 20, windowSeconds: FAILURE_WINDOW_SECONDS },
+    ])
+
+    if (!limit.allowed) {
+      return rateLimitResponse(
+        limit.retryAfter,
+        'Too many incorrect codes. Please wait 15 minutes and request a new one.'
+      )
+    }
+
     const admin = createAdminClient()
-    const otpHash = crypto.createHash('sha256').update(token).digest('hex')
+    const otpHash = crypto.createHash('sha256').update(String(token)).digest('hex')
 
     const { data: otpRow, error: otpError } = await admin
       .from('otp_codes')
@@ -27,26 +58,44 @@ export async function POST(request: NextRequest) {
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (otpError || !otpRow) {
+      await recordRateLimitEvent('otp:verify:fail', normalizedPhone)
+      await recordRateLimitEvent('otp:verify:fail:ip', ip)
       return NextResponse.json({ error: 'OTP has expired' }, { status: 400 })
     }
 
-    if (otpRow.attempts >= 5) {
-      return NextResponse.json(
-        { error: 'Too many attempts. Please request a new OTP.' },
-        { status: 429 }
-      )
-    }
+    const submitted = Buffer.from(otpHash, 'hex')
+    const expected = Buffer.from(otpRow.otp_hash, 'hex')
+    const matches =
+      submitted.length === expected.length &&
+      crypto.timingSafeEqual(submitted, expected)
 
-    if (otpRow.otp_hash !== otpHash) {
+    if (!matches) {
       await admin
         .from('otp_codes')
         .update({ attempts: otpRow.attempts + 1 })
         .eq('id', otpRow.id)
 
+      await recordRateLimitEvent('otp:verify:fail', normalizedPhone)
+      await recordRateLimitEvent('otp:verify:fail:ip', ip)
+
       return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 })
+    }
+
+    // Burn the code before doing anything else, so it cannot be replayed by a
+    // concurrent request while the account work below is still running.
+    const { data: burned } = await admin
+      .from('otp_codes')
+      .update({ verified_at: new Date().toISOString() })
+      .eq('id', otpRow.id)
+      .is('verified_at', null)
+      .select('id')
+      .maybeSingle()
+
+    if (!burned) {
+      return NextResponse.json({ error: 'OTP has expired' }, { status: 400 })
     }
 
     const email = phoneToAuthEmail(normalizedPhone)
@@ -54,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     const { data: existingProfile } = await admin
       .from('users')
-      .select('id, password_set_at, profile_completed_at')
+      .select('id')
       .eq('phone_number', normalizedPhone)
       .maybeSingle()
 
@@ -72,11 +121,9 @@ export async function POST(request: NextRequest) {
         })
 
       if (createError || !created?.user) {
-        // Fallback: If user already exists in auth.users (e.g. public.users row was deleted), find existing auth user
-        const { data: userList } = await admin.auth.admin.listUsers()
-        const foundAuthUser = userList?.users?.find(
-          u => u.email === email || u.phone === normalizedPhone || u.user_metadata?.phone_number === normalizedPhone
-        )
+        // The auth user can outlive its public.users row. Find it and reuse it
+        // rather than failing the login.
+        const foundAuthUser = await findAuthUserByEmail(admin, email, normalizedPhone)
 
         if (foundAuthUser) {
           userId = foundAuthUser.id
@@ -87,8 +134,9 @@ export async function POST(request: NextRequest) {
             phone_confirm: true,
           })
         } else {
+          console.error('Failed to create auth user:', createError?.message)
           return NextResponse.json(
-            { error: createError?.message || 'Failed to create user' },
+            { error: 'Failed to create account' },
             { status: 500 }
           )
         }
@@ -108,7 +156,8 @@ export async function POST(request: NextRequest) {
       )
 
       if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 })
+        console.error('Failed to update auth user:', updateError.message)
+        return NextResponse.json({ error: 'Failed to sign in' }, { status: 500 })
       }
     }
 
@@ -121,26 +170,23 @@ export async function POST(request: NextRequest) {
       { onConflict: 'id', ignoreDuplicates: true }
     )
 
-    await admin
-      .from('otp_codes')
-      .update({ verified_at: new Date().toISOString() })
-      .eq('id', otpRow.id)
-
     const supabase = await createClient()
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      console.error('Sign-in after OTP failed:', error.message)
+      return NextResponse.json({ error: 'Failed to sign in' }, { status: 400 })
     }
 
+    // The session is carried by the auth cookies that signInWithPassword just
+    // set on this response. Returning the tokens in the body as well would put
+    // them within reach of any script on the page.
     return NextResponse.json({
       success: true,
       message: 'OTP verified successfully',
-      user: data.user,
-      session: data.session,
     })
   } catch (error) {
     console.error('Verify OTP error:', error)
@@ -149,4 +195,33 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+type AdminClient = ReturnType<typeof createAdminClient>
+
+/** Pages through auth users; listUsers defaults to a single page of 50. */
+async function findAuthUserByEmail(
+  admin: AdminClient,
+  email: string,
+  phone: string
+) {
+  const perPage = 1000
+  const maxPages = 20
+
+  for (let page = 1; page <= maxPages; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage })
+    if (error || !data?.users?.length) return null
+
+    const found = data.users.find(
+      u =>
+        u.email === email ||
+        u.phone === phone ||
+        u.user_metadata?.phone_number === phone
+    )
+    if (found) return found
+
+    if (data.users.length < perPage) return null
+  }
+
+  return null
 }

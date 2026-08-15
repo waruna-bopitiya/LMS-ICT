@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import ThemeToggle from './ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { Menu, X, Laptop, LogOut, LayoutDashboard, User, BookOpen, CreditCard, UserCheck, Users, Award } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 interface NavbarProps {
   user?: any
@@ -33,8 +34,11 @@ export default function Navbar({ user, isAdmin = false, fullName }: NavbarProps)
     }
   }
 
-  // Navigation Links based on role
-  const links = (() => {
+  // Navigation Links based on role. The signed-out set carries no icon, so the
+  // element type is declared once rather than inferred as a union.
+  type NavLink = { name: string; href: string; icon?: LucideIcon }
+
+  const links: NavLink[] = (() => {
     if (!user) {
       return [
         { name: 'Home', href: '/' },

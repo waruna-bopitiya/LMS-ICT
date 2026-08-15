@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { SRI_LANKA_DISTRICTS, SCHOOLS_LIST } from '@/lib/constants/schools-districts'
+import { validatePassword, PASSWORD_HINT, PASSWORD_MIN_LENGTH } from '@/lib/auth/password'
 
 export default function StudentProfilePage() {
   const router = useRouter()
@@ -75,10 +76,12 @@ export default function StudentProfilePage() {
     setLoading(true)
     setError('')
 
-    // Basic password validation
+    // Same rules the server enforces, checked here so the student sees the
+    // problem next to the field rather than after a submit.
     if (!isExistingUser || form.password) {
-      if (!form.password || form.password.length < 6) {
-        setError('Password must be at least 6 characters')
+      const check = validatePassword(form.password)
+      if (!check.valid) {
+        setError(check.error)
         setLoading(false)
         return
       }
@@ -295,10 +298,11 @@ export default function StudentProfilePage() {
                 onChange={e => updateField('password', e.target.value)}
                 required={!isExistingUser}
                 placeholder={isExistingUser ? 'Leave blank to keep current' : ''}
-                minLength={6}
+                minLength={PASSWORD_MIN_LENGTH}
                 autoComplete="new-password"
                 className="bg-secondary/10 border-border text-foreground"
               />
+              <p className="text-xs text-muted-foreground">{PASSWORD_HINT}</p>
             </div>
 
             <div className="space-y-2">
@@ -313,7 +317,7 @@ export default function StudentProfilePage() {
                 onChange={e => updateField('confirmPassword', e.target.value)}
                 required={!isExistingUser && !!form.password}
                 placeholder={isExistingUser ? 'Leave blank to keep current' : ''}
-                minLength={6}
+                minLength={PASSWORD_MIN_LENGTH}
                 autoComplete="new-password"
                 className="bg-secondary/10 border-border text-foreground"
               />

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Navbar from '@/components/Navbar'
+import { AssetImage } from '@/components/SignedAsset'
 
 interface Payment {
   id: string
@@ -17,7 +18,7 @@ interface Payment {
   status: string
   created_at: string
   courses: { title: string }
-  users: { full_name: string; phone_number: string }
+  users: { full_name: string; phone_number: string; student_id?: number }
 }
 
 export default function AdminPaymentsPage() {
@@ -176,8 +177,8 @@ export default function AdminPaymentsPage() {
                 <CardContent className="p-6 pt-0 border-t border-border/40 space-y-4">
                   {/* Bank Slip Preview */}
                   <div className="relative w-full h-96 bg-secondary/15 rounded-xl border border-border/55 overflow-hidden">
-                    <img
-                      src={payment.bank_slip_url}
+                    <AssetImage
+                      path={payment.bank_slip_url}
                       alt="Bank Slip"
                       className="w-full h-full object-contain"
                     />

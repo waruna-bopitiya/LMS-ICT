@@ -21,6 +21,7 @@ interface MarkRecord {
   percentage: number
   rank: number
   total_participants: number
+  class_average: number
   created_at: string
 }
 

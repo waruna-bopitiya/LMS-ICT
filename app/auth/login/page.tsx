@@ -1,15 +1,23 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Laptop, ChevronLeft, ShieldCheck, PlayCircle, FileText, CheckCircle2 } from 'lucide-react'
+import { normalizePhoneNumber } from '@/lib/auth/phone'
+import { validatePassword, PASSWORD_HINT, PASSWORD_MIN_LENGTH } from '@/lib/auth/password'
 
-export default function LoginPage() {
+// Matches the server cooldown in /api/auth/send-otp, so the button is disabled
+// rather than the student discovering the limit through a 429.
+const RESEND_COOLDOWN_SECONDS = 60
+
+function LoginForm() {
   const router = useRouter()
+  const params = useSearchParams()
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [password, setPassword] = useState('')
@@ -20,6 +28,14 @@ export default function LoginPage() {
   const [isResettingPassword, setIsResettingPassword] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [resendIn, setResendIn] = useState(0)
+  const [notice, setNotice] = useState('')
+
+  useEffect(() => {
+    if (resendIn <= 0) return
+    const timer = setTimeout(() => setResendIn(s => s - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [resendIn])
 
   const sendOtp = async (phoneToSend?: string) => {
     const activePhone = phoneToSend || phone
@@ -34,18 +50,57 @@ export default function LoginPage() {
       throw new Error(data.error || 'Failed to send OTP')
     }
 
+    setResendIn(RESEND_COOLDOWN_SECONDS)
     setStep('otp')
   }
+
+  const handleResendOtp = async () => {
+    if (resendIn > 0 || loading) return
+    setLoading(true)
+    setError('')
+    setNotice('')
+
+    try {
+      await sendOtp()
+      setOtp('')
+      setNotice('A new code is on its way. The previous code no longer works.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not resend the code')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  /** Only same-origin relative paths, so `next` cannot become an open redirect. */
+  const safeNext = (value: string | null) =>
+    value && /^\/(?!\/)[\w\-./?=&%]*$/.test(value) ? value : null
 
   const redirectAfterLogin = async () => {
     const response = await fetch('/api/auth/session-target')
     const data = await response.json()
-    router.push(data.target || '/student/dashboard')
+
+    // A profile that still needs completing takes priority over `next` —
+    // otherwise the student bounces straight back out of the class page.
+    const next = safeNext(params.get('next'))
+    const target =
+      data.target === '/student/profile'
+        ? data.target
+        : next || data.target || '/student/dashboard'
+
+    router.push(target)
     router.refresh()
   }
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validated with the same helper the server uses, so the student gets the
+    // answer immediately instead of after a round trip.
+    if (!normalizePhoneNumber(phone)) {
+      setError('Enter a valid Sri Lankan mobile number, for example 0771234567')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -154,6 +209,13 @@ export default function LoginPage() {
 
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const check = validatePassword(newPassword)
+    if (!check.valid) {
+      setError(check.error)
+      return
+    }
+
     if (newPassword !== confirmNewPassword) {
       setError('Passwords do not match')
       return
@@ -190,6 +252,7 @@ export default function LoginPage() {
     setOtp('')
     setPassword('')
     setError('')
+    setNotice('')
     setFailedAttempts(0)
     setIsResettingPassword(false)
   }
@@ -418,6 +481,16 @@ export default function LoginPage() {
                   />
                 </div>
 
+                <p className="text-xs text-muted-foreground text-center">
+                  Sent to <span className="font-semibold text-foreground">{phone}</span>
+                </p>
+
+                {notice && (
+                  <div className="p-3 bg-primary/10 border border-primary/20 text-primary rounded-xl text-xs font-semibold">
+                    {notice}
+                  </div>
+                )}
+
                 {error && (
                   <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-xs font-semibold">
                     ⚠ {error}
@@ -436,6 +509,17 @@ export default function LoginPage() {
                     {loading ? 'Verifying OTP...' : 'Verify & Log In'}
                   </Button>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resendIn > 0 || loading}
+                  className="w-full text-xs font-semibold text-muted-foreground hover:text-primary disabled:hover:text-muted-foreground disabled:cursor-not-allowed transition-colors"
+                >
+                  {resendIn > 0
+                    ? `Didn't get the code? Resend in ${resendIn}s`
+                    : "Didn't get the code? Send a new one"}
+                </button>
               </form>
             )}
 
@@ -461,10 +545,11 @@ export default function LoginPage() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={PASSWORD_MIN_LENGTH}
                     autoComplete="new-password"
                     className="border-border text-foreground h-10 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400"
                   />
+                  <p className="text-[11px] text-muted-foreground">{PASSWORD_HINT}</p>
                 </div>
 
                 <div className="space-y-2">
@@ -478,7 +563,7 @@ export default function LoginPage() {
                     value={confirmNewPassword}
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={PASSWORD_MIN_LENGTH}
                     autoComplete="new-password"
                     className="border-border text-foreground h-10 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400"
                   />
@@ -504,5 +589,19 @@ export default function LoginPage() {
       </div>
 
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   )
 }

@@ -71,7 +71,7 @@ export default async function AdminCourseDetailPage({
       const usersMap = new Map(usersData?.map(u => [u.id, u]) || [])
       assignments = assignmentsData.map(a => ({
         ...a,
-        assignment_submissions: (a.assignment_submissions || []).map(s => ({
+        assignment_submissions: (a.assignment_submissions || []).map((s: any) => ({
           ...s,
           users: usersMap.get(s.user_id) || { full_name: 'Unknown Student', phone_number: 'N/A' },
         })),

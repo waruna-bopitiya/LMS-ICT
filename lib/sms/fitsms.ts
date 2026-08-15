@@ -16,6 +16,7 @@ export async function sendFitsms({ to, message }: SendSmsParams) {
 
   if (!apiUrl || !apiKey) {
     if (process.env.NODE_ENV !== 'production') {
+      // Development only: the code has to be readable somewhere to test with.
       console.info(`[SMS dev mode] ${to}: ${message}`)
       return
     }
@@ -41,6 +42,9 @@ export async function sendFitsms({ to, message }: SendSmsParams) {
       'Content-Type': 'application/json',
     }
 
+    // Header-authenticated attempts only. The legacy query-string form put the
+    // API key in the URL, where it lands in the provider's access logs and in
+    // any proxy along the way.
     const attempts: SmsAttempt[] = [
       {
         name: 'v4-json',
@@ -60,41 +64,30 @@ export async function sendFitsms({ to, message }: SendSmsParams) {
           body: jsonBody,
         },
       },
-      {
-        name: 'http-query',
-        url: buildHttpApiUrl(apiUrl, apiKey, cleanPhoneNumber, message, senderId),
-        init: {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json',
-          },
-        },
-      },
     ]
 
     let lastError = 'Unknown FitSMS error'
 
     for (const attempt of attempts) {
-      console.log(`FitSMS attempt: ${attempt.name}`)
-      console.log(`FitSMS API URL: ${maskToken(attempt.url)}`)
-      console.log(`Sending SMS to ${cleanPhoneNumber}`)
-
-      const response = await fetch(attempt.url, attempt.init)
+      const response = await fetch(attempt.init.method === 'POST' ? attempt.url : attempt.url, {
+        ...attempt.init,
+        signal: AbortSignal.timeout(15_000),
+      })
       const responseText = await response.text()
-      console.log(`FitSMS HTTP Status: ${response.status}`)
-      console.log(`FitSMS Response:`, responseText)
-
       const result = parseSmsResponse(responseText)
 
       if (response.ok && result.status !== 'error') {
-        console.log(`SMS sent successfully to ${cleanPhoneNumber}`)
+        // Recipient numbers and message bodies stay out of the logs.
+        console.log(`SMS sent via ${attempt.name} to ${maskPhone(cleanPhoneNumber)}`)
         return result
       }
+
+      console.warn(`FitSMS ${attempt.name} failed with HTTP ${response.status}`)
 
       lastError =
         result.message ||
         result.error ||
-        `HTTP ${response.status}: ${response.statusText || responseText}`
+        `HTTP ${response.status}: ${response.statusText}`
     }
 
     throw new Error(`FitSMS API Error: ${lastError}`)
@@ -102,24 +95,6 @@ export async function sendFitsms({ to, message }: SendSmsParams) {
     console.error(`FitSMS Error:`, error)
     throw error
   }
-}
-
-function buildHttpApiUrl(
-  apiUrl: string,
-  apiKey: string,
-  to: string,
-  message: string,
-  senderId: string
-) {
-  const url = new URL(apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`)
-  url.search = new URLSearchParams({
-    token: apiKey,
-    to,
-    message,
-    sender_id: senderId,
-  }).toString()
-
-  return url.toString()
 }
 
 function parseSmsResponse(responseText: string) {
@@ -130,11 +105,7 @@ function parseSmsResponse(responseText: string) {
   }
 }
 
-function maskToken(url: string) {
-  const safeUrl = new URL(url)
-  if (safeUrl.searchParams.has('token')) {
-    safeUrl.searchParams.set('token', '***')
-  }
-
-  return safeUrl.toString()
+/** Keeps enough of the number to correlate a log line, not enough to identify. */
+function maskPhone(phone: string) {
+  return phone.length > 4 ? `${'*'.repeat(phone.length - 4)}${phone.slice(-4)}` : '****'
 }

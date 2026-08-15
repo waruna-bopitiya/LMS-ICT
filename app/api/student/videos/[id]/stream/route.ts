@@ -1,6 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { extractYoutubeId } from '@/lib/video'
+import { assertSafeUrl, UnsafeUrlError } from '@/lib/safe-fetch'
 import { NextRequest, NextResponse } from 'next/server'
+
+// Optional tightening: set to the hosts you actually serve video from, e.g.
+// 'supabase.co,cdn.example.com'. When set, DNS resolution is skipped in favour
+// of an exact allowlist, which is strictly stronger.
+const ALLOWED_VIDEO_HOSTS = (process.env.ALLOWED_VIDEO_HOSTS || '')
+  .split(',')
+  .map(h => h.trim().toLowerCase())
+  .filter(Boolean)
 
 export async function GET(
   request: NextRequest,
@@ -52,9 +61,26 @@ export async function GET(
       )
     }
 
+    // The URL comes from the database and is streamed straight back to the
+    // caller, so it is validated before any request leaves this server.
+    let safeUrl: URL
+    try {
+      safeUrl = await assertSafeUrl(video.youtube_url, {
+        allowedHosts: ALLOWED_VIDEO_HOSTS,
+      })
+    } catch (error) {
+      if (error instanceof UnsafeUrlError) {
+        console.error(`Blocked unsafe video source on video ${id}: ${error.message}`)
+        return NextResponse.json({ error: 'Video source unavailable' }, { status: 400 })
+      }
+      throw error
+    }
+
     const range = request.headers.get('range')
-    const upstream = await fetch(video.youtube_url, {
+    const upstream = await fetch(safeUrl, {
       headers: range ? { Range: range } : undefined,
+      redirect: 'error', // a redirect could land somewhere the check rejected
+      signal: AbortSignal.timeout(30_000),
     })
 
     if (!upstream.ok && upstream.status !== 206) {

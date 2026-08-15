@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -48,12 +49,12 @@ export default function EnrollmentForm({
   courseId: string
   coursePrice: number
 }) {
+  const router = useRouter()
   const [step, setStep] = useState<'choice' | 'info' | 'upload'>('choice')
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
 
   const handleCopy = (text: string, index: number) => {
@@ -64,15 +65,20 @@ export default function EnrollmentForm({
     }, 2000)
   }
 
+  // Mirrors the server allowlist in lib/supabase/admin.ts, so a file that will
+  // be rejected is caught here instead of after a full upload.
+  const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+  const MAX_BYTES = 15 * 1024 * 1024
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
     if (selectedFile) {
-      if (!selectedFile.type.startsWith('image/')) {
-        setError('Please upload an image file')
+      if (!ACCEPTED.includes(selectedFile.type)) {
+        setError('Please upload a JPG, PNG, or PDF of your bank slip')
         return
       }
-      if (selectedFile.size > 5 * 1024 * 1024) {
-        setError('File size must be less than 5MB')
+      if (selectedFile.size > MAX_BYTES) {
+        setError('That file is larger than 15MB. Try a photo at a lower resolution.')
         return
       }
       setFile(selectedFile)
@@ -96,13 +102,11 @@ export default function EnrollmentForm({
         throw new Error(data.error || 'Failed to initialize checkout')
       }
 
-      // Generate dynamic redirect URLs
-      const origin = window.location.origin
-      const returnUrl = `${origin}/student/dashboard`
-      const cancelUrl = `${origin}/student/courses/${courseId}`
-      const notifyUrl = `${origin}/api/payments/payhere/notify`
+      // Redirect and callback URLs come from the server, so a tampered client
+      // cannot redirect PayHere's server-to-server notification elsewhere.
+      const { returnUrl, cancelUrl, notifyUrl } = data
 
-      const payhereUrl = data.sandbox 
+      const payhereUrl = data.sandbox
         ? 'https://sandbox.payhere.lk/pay/checkout'
         : 'https://www.payhere.lk/pay/checkout'
 
@@ -160,10 +164,10 @@ export default function EnrollmentForm({
     }
 
     try {
+      // No amount: the server reads it from the course record.
       const formData = new FormData()
       formData.append('file', file)
       formData.append('courseId', courseId)
-      formData.append('amount', coursePrice.toString())
 
       const response = await fetch('/api/payments/upload-slip', {
         method: 'POST',
@@ -174,33 +178,18 @@ export default function EnrollmentForm({
 
       if (!response.ok) {
         setError(data.error || 'Failed to upload bank slip')
+        setLoading(false)
         return
       }
 
-      setSuccess(true)
-      setFile(null)
-      setStep('choice')
+      // Both payment routes end on the same confirmation screen, so the student
+      // always sees an explicit outcome rather than being dropped somewhere.
+      router.push(`/student/payment/return?payment=${data.paymentId}`)
     } catch (err) {
       setError('An error occurred. Please try again.')
       console.error(err)
-    } finally {
       setLoading(false)
     }
-  }
-
-  if (success) {
-    return (
-      <div className="space-y-4">
-        <div className="p-4 rounded-md bg-green-500/10 border border-green-500/20 text-center">
-          <p className="text-sm font-semibold text-green-600 dark:text-green-400">
-            ✓ Bank slip uploaded successfully!
-          </p>
-          <p className="text-xs text-green-600/70 dark:text-green-400/70 mt-1">
-            Admin will review and approve your enrollment within 24 hours.
-          </p>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -350,7 +339,7 @@ export default function EnrollmentForm({
                 <Input
                   id="slip"
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
                   onChange={handleFileChange}
                   className="hidden"
                 />
@@ -363,7 +352,7 @@ export default function EnrollmentForm({
                     <p className="font-semibold text-foreground text-sm">
                       {file ? file.name : 'Click to upload slip'}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">PNG, JPG up to 5MB</p>
+                    <p className="text-[10px] text-muted-foreground">JPG, PNG, or PDF up to 15MB</p>
                   </div>
                 </label>
               </div>

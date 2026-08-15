@@ -34,13 +34,21 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedPhone = normalizePhoneNumber(phone)
+
+    if (!normalizedPhone) {
+      return NextResponse.json(
+        { error: 'Enter a valid Sri Lankan mobile number, for example 0771234567' },
+        { status: 400 }
+      )
+    }
+
     const admin = createAdminClient()
 
     const { data: student } = await admin
       .from('users')
       .select('id, phone_number, full_name')
       .eq('phone_number', normalizedPhone)
-      .single()
+      .maybeSingle()
 
     if (!student) {
       return NextResponse.json(

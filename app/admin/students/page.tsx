@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, BookOpen, Search, UserCheck, GraduationCap, School, MapPin, Phone, Calendar, ArrowUpRight, Shield, UserMinus, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { AssetLink } from '@/components/SignedAsset'
 
 export default function AdminStudentsPage() {
   const router = useRouter()
@@ -473,14 +474,12 @@ export default function AdminStudentsPage() {
                               </Button>
 
                               {enrollment.payments && enrollment.payments.bank_slip_url && enrollment.payments.bank_slip_url !== 'manual-admin-activation' && (
-                                <a
-                                  href={enrollment.payments.bank_slip_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                <AssetLink
+                                  path={enrollment.payments.bank_slip_url}
                                   className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 mt-0.5 bg-primary/5 px-2 py-0.5 rounded border border-primary/20"
                                 >
                                   📄 View Slip
-                                </a>
+                                </AssetLink>
                               )}
                             </div>
                           </td>

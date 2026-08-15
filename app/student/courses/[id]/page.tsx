@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createSignedAssetUrl } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -24,7 +25,9 @@ export default async function CoursePage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
+    // Carry the destination through login, so someone who browses to a class
+    // while signed out lands back on it instead of on a generic dashboard.
+    redirect(`/auth/login?next=${encodeURIComponent(`/student/courses/${id}`)}`)
   }
 
   const userProfile = await requireCompletedProfile(supabase, user.id)
@@ -76,6 +79,18 @@ export default async function CoursePage({
     .select('*')
     .eq('course_id', id)
     .order('sequence_order', { ascending: true })
+
+  // Material lives in a private bucket, so each path is signed for this request
+  // only. RLS on course_materials has already restricted this to active
+  // enrolments, so reaching here is itself the authorization check.
+  const signedMaterials = materials
+    ? await Promise.all(
+        materials.map(async material => ({
+          ...material,
+          file_url: (await createSignedAssetUrl(material.file_url)) ?? '',
+        }))
+      )
+    : []
 
   const { data: assignments } = await supabase
     .from('assignments')
@@ -195,9 +210,9 @@ export default async function CoursePage({
                   <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
                     <FileText className="h-5.5 w-5.5 text-primary" /> Lesson Guides & PDFs
                   </h2>
-                  {materials && materials.length > 0 ? (
+                  {signedMaterials.length > 0 ? (
                     <div className="grid sm:grid-cols-2 gap-4">
-                      {materials.map((material) => (
+                      {signedMaterials.map((material) => (
                         <SecurePdfViewer
                           key={material.id}
                           title={material.title}

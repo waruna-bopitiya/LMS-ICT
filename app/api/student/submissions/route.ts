@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { uploadToSupabase } from '@/lib/supabase/admin'
+import { uploadToSupabase, UploadValidationError } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -49,10 +49,11 @@ export async function POST(request: NextRequest) {
 
     let fileUrl: string | null = null
     if (file && file.size > 0) {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-')
-      const filename = `submissions/${assignment.course_id}/${assignmentId}/${user.id}/${Date.now()}-${safeName}`
-      const publicUrl = await uploadToSupabase(file, filename)
-      fileUrl = publicUrl
+      // Path shape matters: /api/assets/sign reads segment 3 as the owner id.
+      fileUrl = await uploadToSupabase(
+        file,
+        `submissions/${assignment.course_id}/${assignmentId}/${user.id}`
+      )
     }
 
     const { error } = await supabase.from('assignment_submissions').upsert(
@@ -72,6 +73,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (error instanceof UploadValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
     console.error('Student submission error:', error)
     return NextResponse.json({ error: 'Failed to submit' }, { status: 500 })
   }

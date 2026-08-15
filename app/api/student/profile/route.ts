@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { validatePassword } from '@/lib/auth/password'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET() {
@@ -68,11 +70,9 @@ export async function POST(request: NextRequest) {
     const isPasswordRequired = !existingProfile?.password_set_at
 
     if (isPasswordRequired || password) {
-      if (!password || password.length < 6) {
-        return NextResponse.json(
-          { error: 'Password must be at least 6 characters' },
-          { status: 400 }
-        )
+      const check = validatePassword(password)
+      if (!check.valid) {
+        return NextResponse.json({ error: check.error }, { status: 400 })
       }
 
       if (password !== confirmPassword) {
@@ -91,7 +91,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { error } = await supabase
+    // profile_completed_at and password_set_at are no longer writable by the
+    // authenticated role (see the column grants in the hardening migration), so
+    // this write goes through the service role — scoped to the id we just
+    // resolved from the session, never one supplied by the caller.
+    const { error } = await createAdminClient()
       .from('users')
       .update({
         full_name: fullName,

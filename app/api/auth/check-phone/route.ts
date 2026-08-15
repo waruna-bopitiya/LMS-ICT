@@ -1,5 +1,11 @@
 import { normalizePhoneNumber } from '@/lib/auth/phone'
 import { createAdminClient } from '@/lib/supabase/admin'
+import {
+  checkAllRateLimits,
+  getClientIp,
+  rateLimitResponse,
+  recordRateLimitEvent,
+} from '@/lib/rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -10,34 +16,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Phone number is required' }, { status: 400 })
     }
 
-    const cleanDigits = phone.replace(/\D/g, '')
-    if (cleanDigits.length < 9) {
-      return NextResponse.json({ error: 'Phone number must have at least 9 digits' }, { status: 400 })
+    const normalizedPhone = normalizePhoneNumber(phone)
+
+    if (!normalizedPhone) {
+      return NextResponse.json(
+        { error: 'Enter a valid Sri Lankan mobile number, for example 0771234567' },
+        { status: 400 }
+      )
     }
 
-    const last9 = cleanDigits.slice(-9)
+    const ip = getClientIp(request)
+
+    const limit = await checkAllRateLimits([
+      { bucket: 'auth:check-phone:ip', subject: ip, limit: 20, windowSeconds: 3600 },
+    ])
+
+    if (!limit.allowed) {
+      return rateLimitResponse(limit.retryAfter, 'Too many requests. Please try again later.')
+    }
+
+    await recordRateLimitEvent('auth:check-phone:ip', ip)
+
     const admin = createAdminClient()
 
-    // Match database phone number using the last 9 digits
+    // Exact match on the normalized form. The previous last-9-digits LIKE was
+    // both an enumeration aid and a correctness hazard — it can match the wrong
+    // student once numbers overlap.
     const { data: profile } = await admin
       .from('users')
-      .select('id, phone_number, full_name, profile_completed_at, password_set_at, is_admin')
-      .like('phone_number', `%${last9}`)
-      .limit(1)
+      .select('profile_completed_at, password_set_at')
+      .eq('phone_number', normalizedPhone)
       .maybeSingle()
 
-    if (profile) {
-      return NextResponse.json({
-        phone: profile.phone_number,
-        canLoginWithPassword: Boolean(profile.is_admin || (profile.profile_completed_at && profile.password_set_at)),
-      })
-    }
-
-    // Default normalization for new signups
-    const normalizedPhone = normalizePhoneNumber(phone)
+    // The response shape is identical whether or not the number is registered.
+    // Only whether a password has actually been set is revealed, which the
+    // login form needs to decide which field to show, and which an attacker
+    // cannot turn into a roster of accounts.
     return NextResponse.json({
       phone: normalizedPhone,
-      canLoginWithPassword: false,
+      canLoginWithPassword: Boolean(
+        profile?.profile_completed_at && profile?.password_set_at
+      ),
     })
   } catch (error) {
     console.error('Check phone error:', error)
