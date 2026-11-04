@@ -99,6 +99,9 @@ export async function POST(request: NextRequest) {
     }
 
     const email = phoneToAuthEmail(normalizedPhone)
+    // Only used when creating a brand-new account. Existing accounts keep their
+    // own password: OTP sign-in goes through a one-time token instead, so it no
+    // longer overwrites the password a student set for password login.
     const password = crypto.randomBytes(24).toString('base64url')
 
     const { data: existingProfile } = await admin
@@ -129,7 +132,6 @@ export async function POST(request: NextRequest) {
           userId = foundAuthUser.id
           await admin.auth.admin.updateUserById(userId, {
             email,
-            password,
             email_confirm: true,
             phone_confirm: true,
           })
@@ -149,7 +151,6 @@ export async function POST(request: NextRequest) {
         {
           email,
           phone: normalizedPhone,
-          password,
           email_confirm: true,
           phone_confirm: true,
         }
@@ -170,10 +171,22 @@ export async function POST(request: NextRequest) {
       { onConflict: 'id', ignoreDuplicates: true }
     )
 
-    const supabase = await createClient()
-    const { error } = await supabase.auth.signInWithPassword({
+    // The phone was just proven by the OTP, so mint a single-use sign-in token
+    // for this account and redeem it straight away to set the session cookies.
+    const { data: link, error: linkError } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
       email,
-      password,
+    })
+
+    if (linkError || !link?.properties?.hashed_token) {
+      console.error('Sign-in token failed:', linkError?.message)
+      return NextResponse.json({ error: 'Failed to sign in' }, { status: 500 })
+    }
+
+    const supabase = await createClient()
+    const { error } = await supabase.auth.verifyOtp({
+      type: 'magiclink',
+      token_hash: link.properties.hashed_token,
     })
 
     if (error) {

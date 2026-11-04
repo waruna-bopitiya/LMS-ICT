@@ -236,6 +236,46 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* O/L ICT Seminar Section */}
+      <section id="seminar" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ScrollReveal>
+          <Card className="tech-card p-0 shadow-none overflow-hidden">
+            <div className="grid md:grid-cols-2 gap-8 p-8 md:p-12 items-center">
+              <div>
+                <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 rounded-full px-3 py-1 mb-4">
+                  Free · O/L 2026
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 tracking-tight">
+                  O/L ICT Free Seminar
+                </h2>
+                <p className="text-muted-foreground text-lg mb-6">
+                  A 5-day plan to score 75+ in O/L ICT, built from every 2020–2025 past paper in English and Sinhala medium.
+                </p>
+                <Link href="https://seminar.iseeict.com">
+                  <Button className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-6 rounded-xl h-11">
+                    Open the Seminar <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </Link>
+                <p className="text-xs text-muted-foreground mt-3">Sign in with your I See ICT phone number to access it.</p>
+              </div>
+              <ul className="grid gap-3">
+                {[
+                  'Every past paper question sorted by topic and year',
+                  'Theory notes linked to the Grade 10–11 textbook pages',
+                  'Pascal Lab: run and trace code in the browser',
+                  '5-day checklist and a 75+ roadmap with exam countdown',
+                ].map(item => (
+                  <li key={item} className="flex gap-3 text-foreground">
+                    <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Card>
+        </ScrollReveal>
+      </section>
+
       {/* Available Courses Section */}
       <section id="courses" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
