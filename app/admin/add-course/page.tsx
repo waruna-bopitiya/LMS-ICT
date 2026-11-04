@@ -154,23 +154,23 @@ export default function AddCoursePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
         <div className="mb-8">
           <Link href="/admin/courses" className="text-primary hover:text-primary/80 transition mb-4 inline-block">
-            ← Back to Courses
+            ← Back to Classes
           </Link>
-          <h1 className="text-4xl font-bold text-foreground mb-2">Create New Course</h1>
-          <p className="text-muted-foreground">Add course details and YouTube videos</p>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Create New Class</h1>
+          <p className="text-muted-foreground">Add class details and YouTube videos</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Course Details */}
           <Card className="border-border glass-panel rounded-2xl">
             <CardHeader>
-              <CardTitle className="text-foreground">Course Details</CardTitle>
-              <CardDescription>Basic information about your course</CardDescription>
+              <CardTitle className="text-foreground">Class Details</CardTitle>
+              <CardDescription>Basic information about your class</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="title" className="text-sm font-medium text-foreground">
-                  Course Title *
+                  Class Title *
                 </label>
                 <Input
                   id="title"
@@ -190,7 +190,7 @@ export default function AddCoursePage() {
                   id="description"
                   value={courseData.description}
                   onChange={e => handleCourseChange('description', e.target.value)}
-                  placeholder="Course description..."
+                  placeholder="Class description..."
                   rows={4}
                   className="w-full px-3 py-2 bg-secondary/10 border border-border rounded-md text-foreground placeholder:text-muted-foreground"
                 />
@@ -217,8 +217,8 @@ export default function AddCoursePage() {
           {/* Videos */}
           <Card className="border-border">
             <CardHeader>
-              <CardTitle className="text-foreground">Course Videos</CardTitle>
-            <CardDescription>Add YouTube, Vimeo, or uploaded video links to your course</CardDescription>
+              <CardTitle className="text-foreground">Class Videos</CardTitle>
+            <CardDescription>Add YouTube, Vimeo, or uploaded video links to your class</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {videos.map((video, index) => (
@@ -291,7 +291,7 @@ export default function AddCoursePage() {
 
           <Card className="border-border">
             <CardHeader>
-              <CardTitle className="text-foreground">Course PDFs</CardTitle>
+              <CardTitle className="text-foreground">Class PDFs</CardTitle>
               <CardDescription>Add PDF notes, papers, or handouts</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -368,7 +368,7 @@ export default function AddCoursePage() {
               disabled={loading}
               className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              {loading ? 'Creating...' : 'Create Course'}
+              {loading ? 'Creating...' : 'Create Class'}
             </Button>
           </div>
         </form>
