@@ -1,5 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { createClient as createSupabase } from '@supabase/supabase-js'
+import { createClient as createCookieClient } from '@/lib/supabase/server'
 
 // Sibling sites that log students in through this site's auth API.
 // They run on their own origin, so they get a single-use sign-in token to
@@ -17,8 +19,8 @@ export const partnerOrigin = (request: Request) => {
 
 const corsHeaders = (origin: string) => ({
   'Access-Control-Allow-Origin': origin,
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Max-Age': '600',
   Vary: 'Origin',
 })
@@ -51,4 +53,30 @@ export const partnerTokenResponse = async (request: Request, email: string) => {
       ? NextResponse.json({ success: true, token_hash })
       : NextResponse.json({ error: 'Failed to sign in' }, { status: 500 })
   )
+}
+
+/**
+ * Supabase client for the caller. A partner site sends its session as a
+ * Bearer token; everyone else is read from this site's cookies. RLS applies
+ * either way, since both act as the signed-in student.
+ */
+export async function requestClient(request: Request) {
+  const bearer = request.headers.get('authorization')?.match(/^Bearer (.+)$/)?.[1]
+  if (bearer && partnerOrigin(request)) {
+    return createSupabase(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      auth: { autoRefreshToken: false, persistSession: false },
+      global: { headers: { Authorization: `Bearer ${bearer}` } },
+    })
+  }
+  return createCookieClient()
+}
+
+/** The signed-in student and a client acting as them, or user null. */
+export async function requestUser(request: Request) {
+  const supabase = await requestClient(request)
+  const bearer = request.headers.get('authorization')?.match(/^Bearer (.+)$/)?.[1]
+  const {
+    data: { user },
+  } = bearer && partnerOrigin(request) ? await supabase.auth.getUser(bearer) : await supabase.auth.getUser()
+  return { supabase, user }
 }
