@@ -9,6 +9,10 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { SRI_LANKA_DISTRICTS, SCHOOLS_LIST } from '@/lib/constants/schools-districts'
 import { validatePassword, PASSWORD_HINT, PASSWORD_MIN_LENGTH } from '@/lib/auth/password'
+import { safeNext, goTo } from '@/lib/supabase/cookie'
+
+const nextTarget = () =>
+  (typeof window !== 'undefined' && safeNext(new URLSearchParams(window.location.search).get('next'))) || '/student/dashboard'
 
 export default function StudentProfilePage() {
   const router = useRouter()
@@ -47,7 +51,7 @@ export default function StudentProfilePage() {
               confirmPassword: '',
             })
             if (data.profile.full_name && data.profile.district) {
-              router.push('/student/dashboard')
+              goTo(nextTarget(), router.push)
               return
             }
             if (data.profile.student_id) {
@@ -105,7 +109,7 @@ export default function StudentProfilePage() {
         return
       }
 
-      router.push('/student/dashboard')
+      goTo(nextTarget(), router.push)
       router.refresh()
     } catch (err) {
       console.error(err)

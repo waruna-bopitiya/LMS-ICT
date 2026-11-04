@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Laptop, ChevronLeft, ShieldCheck, PlayCircle, FileText, CheckCircle2 } from 'lucide-react'
 import { normalizePhoneNumber } from '@/lib/auth/phone'
 import { validatePassword, PASSWORD_HINT, PASSWORD_MIN_LENGTH } from '@/lib/auth/password'
-import { ssoHosts } from '@/lib/supabase/cookie'
+import { safeNext } from '@/lib/supabase/cookie'
 
 // Matches the server cooldown in /api/auth/send-otp, so the button is disabled
 // rather than the student discovering the limit through a 429.
@@ -72,21 +72,6 @@ function LoginForm() {
     }
   }
 
-  /**
-   * Same-origin relative paths, or https URLs on an allowlisted sibling site
-   * (NEXT_PUBLIC_SSO_ALLOWED_HOSTS), so `next` cannot become an open redirect.
-   */
-  const safeNext = (value: string | null) => {
-    if (!value) return null
-    if (/^\/(?!\/)[\w\-./?=&%]*$/.test(value)) return value
-    try {
-      const url = new URL(value)
-      return url.protocol === 'https:' && ssoHosts.includes(url.hostname) ? url.toString() : null
-    } catch {
-      return null
-    }
-  }
-
   const redirectAfterLogin = async () => {
     const response = await fetch('/api/auth/session-target')
     const data = await response.json()
@@ -94,9 +79,11 @@ function LoginForm() {
     // A profile that still needs completing takes priority over `next` —
     // otherwise the student bounces straight back out of the class page.
     const next = safeNext(params.get('next'))
+    // Carry `next` through profile setup so a new student still lands back
+    // on the page that sent them here, such as the seminar site.
     const target =
       data.target === '/student/profile'
-        ? data.target
+        ? next ? `/student/profile?next=${encodeURIComponent(next)}` : data.target
         : next || data.target || '/student/dashboard'
 
     if (/^https:/.test(target)) {

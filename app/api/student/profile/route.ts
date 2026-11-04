@@ -1,14 +1,11 @@
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { validatePassword } from '@/lib/auth/password'
 import { NextRequest, NextResponse } from 'next/server'
+import { preflight, requestUser, withCors } from '@/lib/cors'
 
-export async function GET() {
+async function read(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { supabase, user } = await requestUser(request)
 
     if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
@@ -34,12 +31,9 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function save(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { supabase, user } = await requestUser(request)
 
     if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
@@ -51,6 +45,8 @@ export async function POST(request: NextRequest) {
     const school = String(body.school || '').trim()
     const district = String(body.district || '').trim()
     const guardianPhone = String(body.guardianPhone || '').trim()
+    const marketingConsent = body.marketingConsent === true
+    const source = typeof body.source === 'string' ? body.source.slice(0, 40) : null
     const password = String(body.password || '')
     const confirmPassword = String(body.confirmPassword || '')
 
@@ -63,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     const { data: existingProfile } = await supabase
       .from('users')
-      .select('password_set_at')
+      .select('password_set_at, signup_source')
       .eq('id', user.id)
       .single()
 
@@ -82,7 +78,9 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const { error: passwordError } = await supabase.auth.updateUser({
+      // Through the service role, scoped to the session's user: a partner site's
+      // Bearer client has no stored session for auth.updateUser to act on.
+      const { error: passwordError } = await createAdminClient().auth.admin.updateUserById(user.id, {
         password,
       })
 
@@ -104,6 +102,9 @@ export async function POST(request: NextRequest) {
         district,
         guardian_phone: guardianPhone || null,
         profile_completed_at: new Date().toISOString(),
+        // Only an explicit tick counts as consent; it is never cleared here.
+        ...(marketingConsent ? { marketing_consent: true, marketing_consent_at: new Date().toISOString() } : {}),
+        ...(source && !existingProfile?.signup_source ? { signup_source: source } : {}),
         ...((isPasswordRequired || password) ? { password_set_at: new Date().toISOString() } : {})
       })
       .eq('id', user.id)
@@ -121,3 +122,8 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// Also used by partner sites such as seminar.iseeict.com, with a Bearer session.
+export const OPTIONS = preflight
+export const GET = async (request: NextRequest) => withCors(request, await read(request))
+export const POST = async (request: NextRequest) => withCors(request, await save(request))

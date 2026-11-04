@@ -8,6 +8,7 @@ import {
   recordRateLimitEvent,
 } from '@/lib/rate-limit'
 import crypto from 'crypto'
+import { partnerOrigin, partnerTokenResponse, preflight, withCors } from '@/lib/cors'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Failures are counted per phone number over a window rather than per OTP row.
@@ -16,7 +17,7 @@ import { NextRequest, NextResponse } from 'next/server'
 const MAX_FAILURES = 5
 const FAILURE_WINDOW_SECONDS = 900
 
-export async function POST(request: NextRequest) {
+async function handle(request: NextRequest) {
   try {
     const { phone, token } = await request.json()
 
@@ -171,6 +172,9 @@ export async function POST(request: NextRequest) {
       { onConflict: 'id', ignoreDuplicates: true }
     )
 
+    // A partner site starts its own session from a token; it cannot use our cookies.
+    if (partnerOrigin(request)) return partnerTokenResponse(request, email)
+
     // The phone was just proven by the OTP, so mint a single-use sign-in token
     // for this account and redeem it straight away to set the session cookies.
     const { data: link, error: linkError } = await admin.auth.admin.generateLink({
@@ -237,4 +241,11 @@ async function findAuthUserByEmail(
   }
 
   return null
+}
+
+// Also callable from partner sites such as seminar.iseeict.com.
+export const OPTIONS = preflight
+
+export async function POST(request: NextRequest) {
+  return withCors(request, await handle(request))
 }
