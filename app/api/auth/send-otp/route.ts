@@ -8,6 +8,7 @@ import {
   recordRateLimitEvent,
 } from '@/lib/rate-limit'
 import crypto from 'crypto'
+import { preflight, withCors } from '@/lib/cors'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Each send costs real money and rings a real phone, so the endpoint is limited
@@ -20,7 +21,7 @@ const PER_PHONE_DAILY = 10
 const PER_IP_HOURLY = 10
 const GLOBAL_HOURLY = 200
 
-export async function POST(request: NextRequest) {
+async function handle(request: NextRequest) {
   try {
     const { phone } = await request.json()
 
@@ -109,4 +110,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// Also callable from partner sites such as seminar.iseeict.com.
+export const OPTIONS = preflight
+
+export async function POST(request: NextRequest) {
+  return withCors(request, await handle(request))
 }
