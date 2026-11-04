@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Laptop, ChevronLeft, ShieldCheck, PlayCircle, FileText, CheckCircle2 } from 'lucide-react'
 import { normalizePhoneNumber } from '@/lib/auth/phone'
 import { validatePassword, PASSWORD_HINT, PASSWORD_MIN_LENGTH } from '@/lib/auth/password'
+import { ssoHosts } from '@/lib/supabase/cookie'
 
 // Matches the server cooldown in /api/auth/send-otp, so the button is disabled
 // rather than the student discovering the limit through a 429.
@@ -71,9 +72,20 @@ function LoginForm() {
     }
   }
 
-  /** Only same-origin relative paths, so `next` cannot become an open redirect. */
-  const safeNext = (value: string | null) =>
-    value && /^\/(?!\/)[\w\-./?=&%]*$/.test(value) ? value : null
+  /**
+   * Same-origin relative paths, or https URLs on an allowlisted sibling site
+   * (NEXT_PUBLIC_SSO_ALLOWED_HOSTS), so `next` cannot become an open redirect.
+   */
+  const safeNext = (value: string | null) => {
+    if (!value) return null
+    if (/^\/(?!\/)[\w\-./?=&%]*$/.test(value)) return value
+    try {
+      const url = new URL(value)
+      return url.protocol === 'https:' && ssoHosts.includes(url.hostname) ? url.toString() : null
+    } catch {
+      return null
+    }
+  }
 
   const redirectAfterLogin = async () => {
     const response = await fetch('/api/auth/session-target')
@@ -86,6 +98,11 @@ function LoginForm() {
       data.target === '/student/profile'
         ? data.target
         : next || data.target || '/student/dashboard'
+
+    if (/^https:/.test(target)) {
+      window.location.assign(target)
+      return
+    }
 
     router.push(target)
     router.refresh()
