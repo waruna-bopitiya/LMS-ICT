@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
 import Navbar from '@/components/Navbar'
+import CourseAdminActions from '@/components/CourseAdminActions'
 
 export default async function AdminCoursesPage() {
   const supabase = await createClient()
@@ -58,8 +59,8 @@ export default async function AdminCoursesPage() {
         {courses && courses.length > 0 ? (
           <div className="grid gap-6">
             {courses.map((course) => (
-              <Link key={course.id} href={`/admin/courses/${course.id}`}>
-                <Card className="glass-panel border-border hover:shadow-md hover:border-primary/30 transition-all duration-300 cursor-pointer rounded-2xl overflow-hidden group">
+              <div key={course.id}>
+                <Card className="glass-panel border-border hover:shadow-md hover:border-primary/30 transition-all duration-300 rounded-2xl overflow-hidden group">
                   <CardHeader className="p-6">
                     <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                       <div className="flex-1">
@@ -82,12 +83,17 @@ export default async function AdminCoursesPage() {
                     <div className="text-xs text-muted-foreground font-medium">
                       Created: {new Date(course.created_at).toLocaleDateString()}
                     </div>
-                    <Button variant="outline" className="border-border text-foreground hover:bg-secondary font-semibold rounded-xl h-9">
-                      Manage Class Contents
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <CourseAdminActions id={course.id} title={course.title} published={course.is_published !== false} />
+                      <Link href={`/admin/courses/${course.id}`}>
+                        <Button variant="outline" className="border-border text-foreground hover:bg-secondary font-semibold rounded-xl h-9">
+                          Manage Class Contents
+                        </Button>
+                      </Link>
+                    </div>
                   </CardContent>
                 </Card>
-              </Link>
+              </div>
             ))}
           </div>
         ) : (

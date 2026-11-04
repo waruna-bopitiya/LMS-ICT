@@ -419,7 +419,7 @@ export default async function Home() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-secondary text-primary transition-all duration-300 group-hover:scale-110 group-hover:border-primary/40 group-hover:bg-primary/10">
                     <Mail className="h-5 w-5" />
                   </div>
-                  <span className="text-foreground font-medium text-sm">support@iseeict.lk</span>
+                  <span className="text-foreground font-medium text-sm">support@iseeict.com</span>
                 </div>
 
                 <div className="flex items-center gap-4 group">

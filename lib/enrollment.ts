@@ -31,6 +31,7 @@ export async function startEnrollmentAttempt(
     .from('courses')
     .select('id, title, price')
     .eq('id', courseId)
+    .eq('is_published', true)
     .maybeSingle()
 
   if (!course) {
