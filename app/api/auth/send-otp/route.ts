@@ -8,7 +8,7 @@ import {
   recordRateLimitEvent,
 } from '@/lib/rate-limit'
 import crypto from 'crypto'
-import { preflight, withCors } from '@/lib/cors'
+import { partnerOrigin, preflight, withCors } from '@/lib/cors'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Each send costs real money and rings a real phone, so the endpoint is limited
@@ -39,6 +39,23 @@ async function handle(request: NextRequest) {
         { error: 'Enter a valid Sri Lankan mobile number, for example 0771234567' },
         { status: 400 }
       )
+    }
+
+    // Partner sites log in with passwords and only send a code to sign up, so a
+    // number that already has a password gets no SMS from them.
+    if (partnerOrigin(request)) {
+      const { data: existing } = await createAdminClient()
+        .from('users')
+        .select('password_set_at')
+        .eq('phone_number', normalizedPhone)
+        .maybeSingle()
+
+      if (existing?.password_set_at) {
+        return NextResponse.json(
+          { error: 'You already have an account. Log in with your password.' },
+          { status: 409 }
+        )
+      }
     }
 
     const ip = getClientIp(request)
