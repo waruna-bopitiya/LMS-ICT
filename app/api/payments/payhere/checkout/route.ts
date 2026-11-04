@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       customer: {
         firstName,
         lastName,
-        email: user.email || 'student@iseeict.lk',
+        email: user.email || 'student@iseeict.com',
         phone: profile?.phone_number || '0777777777',
         address: 'No 1, Main Road',
         city: 'Colombo',

@@ -64,9 +64,12 @@ export async function POST(request: NextRequest) {
 
     // Retire any code still outstanding for this number. Without this, older
     // unexpired codes stay valid but are never the row that verification reads.
+    // Expire rather than mark verified: reset-password treats a recent
+    // verified_at as proof of an OTP, so marking here would let anyone holding
+    // a session skip the current-password check just by requesting a code.
     await supabase
       .from('otp_codes')
-      .update({ verified_at: new Date().toISOString() })
+      .update({ expires_at: new Date().toISOString() })
       .eq('phone_number', normalizedPhone)
       .is('verified_at', null)
 
